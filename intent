@@ -1,0 +1,225 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Intent CLI
+ * 
+ * Simple command-line tool for development tasks.
+ * 
+ * Usage:
+ *   php intent serve          - Start dev server
+ *   php intent cache:clear    - Clear cache
+ *   php intent make:handler   - Create handler
+ */
+
+// Load autoloader
+require __DIR__ . '/vendor/autoload.php';
+
+define('BASE_PATH', __DIR__);
+
+// Load config
+Core\Config::load(BASE_PATH . '/config.php');
+
+// Colors
+const GREEN = "\033[32m";
+const RED = "\033[31m";
+const YELLOW = "\033[33m";
+const BLUE = "\033[34m";
+const RESET = "\033[0m";
+
+function success(string $message): void {
+    echo GREEN . "✓ " . RESET . $message . PHP_EOL;
+}
+
+function error(string $message): void {
+    echo RED . "✗ " . RESET . $message . PHP_EOL;
+}
+
+function info(string $message): void {
+    echo BLUE . "→ " . RESET . $message . PHP_EOL;
+}
+
+function title(string $message): void {
+    echo PHP_EOL . YELLOW . $message . RESET . PHP_EOL;
+    echo str_repeat('─', strlen($message)) . PHP_EOL;
+}
+
+// Get command
+$command = $argv[1] ?? 'help';
+$args = array_slice($argv, 2);
+
+match ($command) {
+    'serve' => serve($args),
+    'cache:clear' => cacheClear(),
+    'make:handler' => makeHandler($args),
+    'make:middleware' => makeMiddleware($args),
+    'routes' => listRoutes(),
+    'help', '--help', '-h' => help(),
+    default => unknownCommand($command),
+};
+
+// ─────────────────────────────────────────────────────────────
+// Commands
+// ─────────────────────────────────────────────────────────────
+
+function serve(array $args): void {
+    $port = $args[0] ?? '8080';
+    $host = 'localhost';
+    
+    title("Intent Development Server");
+    info("Starting server at http://{$host}:{$port}");
+    info("Press Ctrl+C to stop");
+    echo PHP_EOL;
+    
+    passthru("php -S {$host}:{$port} -t public");
+}
+
+function cacheClear(): void {
+    title("Clear Cache");
+    
+    Core\Cache::flush();
+    success("Cache cleared successfully");
+}
+
+function makeHandler(array $args): void {
+    $name = $args[0] ?? null;
+    
+    if ($name === null) {
+        error("Please provide a handler name");
+        echo "  Usage: php intent make:handler UserHandler" . PHP_EOL;
+        return;
+    }
+    
+    $name = ucfirst($name);
+    if (!str_ends_with($name, 'Handler')) {
+        $name .= 'Handler';
+    }
+    
+    $path = BASE_PATH . "/app/Handlers/{$name}.php";
+    
+    if (file_exists($path)) {
+        error("Handler already exists: {$path}");
+        return;
+    }
+    
+    $template = <<<PHP
+<?php
+
+declare(strict_types=1);
+
+namespace App\Handlers;
+
+use Core\Request;
+use Core\Response;
+
+class {$name}
+{
+    public function index(Request \$request, Response \$response): Response
+    {
+        return \$response->json(['message' => 'Hello from {$name}']);
+    }
+}
+PHP;
+    
+    if (!is_dir(dirname($path))) {
+        mkdir(dirname($path), 0755, true);
+    }
+    
+    file_put_contents($path, $template);
+    success("Handler created: app/Handlers/{$name}.php");
+}
+
+function makeMiddleware(array $args): void {
+    $name = $args[0] ?? null;
+    
+    if ($name === null) {
+        error("Please provide a middleware name");
+        echo "  Usage: php intent make:middleware RateLimitMiddleware" . PHP_EOL;
+        return;
+    }
+    
+    $name = ucfirst($name);
+    if (!str_ends_with($name, 'Middleware')) {
+        $name .= 'Middleware';
+    }
+    
+    $path = BASE_PATH . "/app/Middleware/{$name}.php";
+    
+    if (file_exists($path)) {
+        error("Middleware already exists: {$path}");
+        return;
+    }
+    
+    $template = <<<PHP
+<?php
+
+declare(strict_types=1);
+
+namespace App\Middleware;
+
+use Core\Middleware;
+use Core\Request;
+use Core\Response;
+
+class {$name} implements Middleware
+{
+    public function handle(Request \$request, callable \$next): Response
+    {
+        // Before handler
+        
+        \$response = \$next(\$request);
+        
+        // After handler
+        
+        return \$response;
+    }
+}
+PHP;
+    
+    file_put_contents($path, $template);
+    success("Middleware created: app/Middleware/{$name}.php");
+}
+
+function listRoutes(): void {
+    title("Registered Routes");
+    info("Routes are defined in routes.php");
+    echo PHP_EOL;
+    
+    // Load routes to display
+    require BASE_PATH . '/routes.php';
+    
+    success("Routes loaded from routes.php");
+}
+
+function help(): void {
+    echo <<<HELP
+
+  Intent Framework CLI
+
+  USAGE:
+    php intent <command> [options]
+
+  COMMANDS:
+    serve [port]         Start development server (default: 8080)
+    cache:clear          Clear all cached data
+    make:handler <name>  Create a new handler class
+    make:middleware <n>  Create a new middleware class
+    routes               List all registered routes
+    help                 Show this help message
+
+  EXAMPLES:
+    php intent serve
+    php intent serve 3000
+    php intent cache:clear
+    php intent make:handler User
+    php intent make:middleware RateLimit
+
+HELP;
+}
+
+function unknownCommand(string $command): void {
+    error("Unknown command: {$command}");
+    echo "  Run 'php intent help' for available commands" . PHP_EOL;
+}
