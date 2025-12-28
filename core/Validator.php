@@ -9,11 +9,16 @@ namespace Core;
  * 
  * Returns array of errors (no exceptions thrown by default).
  * 
- * Usage:
+ * Usage (string syntax - Laravel style):
  *   $validator = new Validator($data, [
  *       'name' => 'required|min:3|max:255',
  *       'email' => 'required|email',
- *       'age' => 'integer|min:18',
+ *   ]);
+ * 
+ * Usage (array syntax - no magic parsing):
+ *   $validator = new Validator($data, [
+ *       'name' => ['required', ['min', 3], ['max', 255]],
+ *       'email' => ['required', 'email'],
  *   ]);
  *   
  *   if ($validator->fails()) {
@@ -129,22 +134,34 @@ final class Validator
 
     /**
      * Apply a single rule.
+     * 
+     * Supports multiple formats:
+     *   'min:3'           - String with colon (Laravel style)
+     *   ['min', 3]        - Array with params (explicit style)
+     *   'required'        - Simple string rule
      */
-    private function applyRule(string $field, mixed $value, string $rule): void
+    private function applyRule(string $field, mixed $value, string|array $rule): void
     {
-        // Parse rule:param format
         $params = [];
-        if (str_contains($rule, ':')) {
-            [$rule, $paramString] = explode(':', $rule, 2);
+        $ruleName = $rule;
+        
+        // Handle array format: ['min', 3] or ['between', 1, 10]
+        if (is_array($rule)) {
+            $ruleName = (string) array_shift($rule);
+            $params = $rule;
+        }
+        // Handle string format: 'min:3' or 'in:a,b,c'
+        elseif (str_contains($rule, ':')) {
+            [$ruleName, $paramString] = explode(':', $rule, 2);
             $params = explode(',', $paramString);
         }
 
-        $method = 'validate' . str_replace('_', '', ucwords($rule, '_'));
+        $method = 'validate' . str_replace('_', '', ucwords($ruleName, '_'));
 
         if (method_exists($this, $method)) {
             $result = $this->$method($field, $value, $params);
             if ($result !== true) {
-                $this->addError($field, $rule, $params, $result);
+                $this->addError($field, $ruleName, $params, $result);
             }
         }
     }
@@ -168,7 +185,7 @@ final class Validator
         $message = str_replace(':field', $this->formatField($field), $message);
         $message = str_replace(':value', (string) ($this->data[$field] ?? ''), $message);
         foreach ($params as $i => $param) {
-            $message = str_replace(':param' . $i, $param, $message);
+            $message = str_replace(':param' . $i, (string) $param, $message);
         }
 
         $this->errors[$field][] = $message;

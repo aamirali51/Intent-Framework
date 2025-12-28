@@ -160,4 +160,50 @@ class ValidatorTest extends TestCase
         $v = Validator::make(['code' => 'abc123'], ['code' => 'alpha_num']);
         $this->assertTrue($v->passes());
     }
+
+    /**
+     * Test array syntax (no string parsing required)
+     */
+    public function testArraySyntax(): void
+    {
+        // Array format: ['min', 3] instead of 'min:3'
+        $v = Validator::make(
+            ['name' => 'Jo', 'age' => 15],
+            [
+                'name' => ['required', ['min', 3]],
+                'age' => ['integer', ['between', 18, 65]],
+            ]
+        );
+        
+        $this->assertTrue($v->fails());
+        $this->assertArrayHasKey('name', $v->errors());
+        $this->assertArrayHasKey('age', $v->errors());
+        
+        // Valid data
+        $v = Validator::make(
+            ['name' => 'John', 'age' => 25],
+            [
+                'name' => ['required', ['min', 3]],
+                'age' => ['integer', ['between', 18, 65]],
+            ]
+        );
+        
+        $this->assertTrue($v->passes());
+    }
+
+    /**
+     * Test mixed syntax (string and array rules together)
+     */
+    public function testMixedSyntax(): void
+    {
+        $v = Validator::make(
+            ['email' => 'john@example.com', 'age' => 25],
+            [
+                'email' => 'required|email',           // String syntax
+                'age' => ['integer', ['min', 18]],    // Array syntax
+            ]
+        );
+        
+        $this->assertTrue($v->passes());
+    }
 }
