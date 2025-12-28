@@ -15,9 +15,10 @@
 7. [Cache](#cache)
 8. [Auth](#auth)
 9. [Event](#event)
-10. [Log](#log)
-11. [Config](#config)
-12. [Helper Functions](#helper-functions)
+10. [Container](#container)
+11. [Log](#log)
+12. [Config](#config)
+13. [Helper Functions](#helper-functions)
 
 ---
 
@@ -955,6 +956,96 @@ Remove all listeners for event.
 #### `flush(): void`
 
 Remove all listeners.
+
+---
+
+## Container
+
+**Class:** `Core\Container`
+
+Minimal service container for testability. Bind, singleton, resolve.
+
+### Methods
+
+#### `bind(string $id, callable $factory, bool $singleton = false): void`
+
+Bind a factory to a key. Called fresh each resolution.
+
+```php
+Container::bind('cache', fn() => new FileCache());
+$cache = Container::make('cache');
+```
+
+#### `singleton(string $id, callable $factory): void`
+
+Bind as singleton (resolved once, cached).
+
+```php
+Container::singleton('db', fn() => new PDO($dsn));
+$db = Container::make('db');  // Same instance every time
+```
+
+#### `instance(string $id, object $instance): void`
+
+Bind an existing instance directly.
+
+```php
+$mockCache = new ArrayCache();
+Container::instance('cache', $mockCache);
+```
+
+#### `make(string $id): mixed`
+
+Resolve a binding.
+
+```php
+$cache = Container::make('cache');
+```
+
+#### `has(string $id): bool`
+
+Check if binding exists.
+
+```php
+if (Container::has('cache')) {
+    $cache = Container::make('cache');
+}
+```
+
+#### `forget(string $id): void`
+
+Remove a binding.
+
+#### `flush(): void`
+
+Clear all bindings (for testing).
+
+```php
+// In test tearDown
+Container::flush();
+```
+
+#### `keys(): array`
+
+Get all registered binding keys.
+
+### Testing Example
+
+```php
+class CacheTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        // Swap file cache with array cache for testing
+        Container::bind('cache', fn() => new ArrayCache());
+    }
+
+    protected function tearDown(): void
+    {
+        Container::flush();
+    }
+}
+```
 
 ---
 
