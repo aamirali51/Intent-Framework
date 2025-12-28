@@ -277,3 +277,36 @@ if (!function_exists('cache')) {
         return \Core\Cache::get($key);
     }
 }
+
+if (!function_exists('csrf_token')) {
+    /**
+     * Get the current CSRF token.
+     * 
+     * WHY: Quick access to CSRF token for forms and AJAX.
+     * 
+     * Usage:
+     *   <input type="hidden" name="_token" value="<?= csrf_token() ?>">
+     */
+    function csrf_token(): string
+    {
+        return \App\Middleware\CsrfMiddleware::getToken();
+    }
+}
+
+if (!function_exists('csrf_field')) {
+    /**
+     * Generate a hidden CSRF token input field.
+     * 
+     * WHY: One-liner for form protection.
+     * 
+     * Usage:
+     *   <form method="POST">
+     *       <?= csrf_field() ?>
+     *       ...
+     *   </form>
+     */
+    function csrf_field(): string
+    {
+        return '<input type="hidden" name="_token" value="' . htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
+    }
+}
