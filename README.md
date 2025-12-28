@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PHP-8.2+-8892BF?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
-  <img src="https://img.shields.io/badge/Tests-107%20Passing-brightgreen?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-119%20Passing-brightgreen?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/PHPStan-Level%208-4ade80?style=for-the-badge" alt="PHPStan Level 8">
   <img src="https://img.shields.io/badge/Version-0.4.0-blue?style=for-the-badge" alt="Version">
 </p>
@@ -9,6 +9,12 @@
 <p align="center">
   <a href="https://github.com/aamirali51/Intent-Framework/actions"><img src="https://github.com/aamirali51/Intent-Framework/workflows/CI/badge.svg" alt="CI Status"></a>
   <a href="https://dashboard.stryker-mutator.io/reports/github.com/aamirali51/Intent-Framework/main"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Faamirali51%2FIntent-Framework%2Fmain" alt="Mutation testing badge"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Built_by-non_expert-red.svg" alt="Built by non-expert">
+  <img src="https://img.shields.io/badge/Time-<1_weekend-green.svg" alt="Time taken">
+  <img src="https://img.shields.io/badge/AI-powered-blue.svg" alt="AI powered">
 </p>
 
 <h1 align="center">Intent Framework</h1>
@@ -94,6 +100,19 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 
 > The whole point of Intent is that it's **readable, predictable, and AI-friendly**.  
 > Whether a human or an AI writes the code, it should be obvious what it does.
+
+---
+
+## 🛡️ Quality Gates
+
+| Tool | Level | Status |
+|------|-------|--------|
+| **PHPStan** | Level 8 | ✅ Passing |
+| **Infection** | MSI 74%+ | ✅ Passing |
+| **PHPUnit** | 119 tests | ✅ Passing |
+| **GitHub Actions** | CI/CD | ✅ Automated |
+
+> All quality checks run automatically on every push and pull request.
 
 ---
 
