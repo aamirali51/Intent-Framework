@@ -103,4 +103,100 @@ class CacheTest extends TestCase
         sleep(2);
         $this->assertNull(Cache::get('expires'));
     }
+
+    // ============ Tests to catch escaped mutants ============
+
+    /**
+     * Test TTL=0 means "forever" (no expiration)
+     * Kills mutant: expires => $ttl > 0 ? ... : -1
+     */
+    public function testZeroTtlMeansForever(): void
+    {
+        Cache::put('forever', 'value', 0);
+        
+        // Should still exist (not expired)
+        $this->assertTrue(Cache::has('forever'));
+        $this->assertEquals('value', Cache::get('forever'));
+    }
+
+    /**
+     * Test that default TTL is 0 (forever)
+     * Kills mutant: $ttl = 0 → $ttl = 1 or $ttl = -1
+     */
+    public function testDefaultTtlIsForever(): void
+    {
+        Cache::put('default_ttl', 'value');
+        
+        // Sleep 2 seconds - should still exist if TTL=0
+        sleep(2);
+        $this->assertTrue(Cache::has('default_ttl'));
+        $this->assertEquals('value', Cache::get('default_ttl'));
+    }
+
+    /**
+     * Test TTL boundary: TTL=0 should NOT add time() to expires
+     * Kills mutant: $ttl > 0 → $ttl >= 0
+     */
+    public function testTtlZeroBoundary(): void
+    {
+        // If TTL=0 incorrectly used >= 0, it would set expires = time() + 0 = now
+        // and immediately expire. This test ensures TTL=0 means "never expire"
+        Cache::put('boundary', 'test', 0);
+        
+        sleep(1);
+        $this->assertEquals('test', Cache::get('boundary'));
+    }
+
+    /**
+     * Test cache directory is created
+     * Kills mutant: mkdir() removal
+     */
+    public function testCacheDirectoryCreated(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/intent_test_' . uniqid();
+        Config::set('path.cache', $tempDir);
+        
+        // Force path creation by putting a value
+        Cache::flush(); // Reset internal path
+        Cache::put('creates_dir', 'value');
+        
+        $this->assertTrue(Cache::has('creates_dir'));
+        $this->assertEquals('value', Cache::get('creates_dir'));
+        
+        // Clean up
+        Cache::flush();
+        @rmdir($tempDir);
+    }
+
+    /**
+     * Test multiple data types
+     */
+    public function testStoresArrays(): void
+    {
+        $data = ['foo' => 'bar', 'baz' => [1, 2, 3]];
+        Cache::put('array', $data);
+        $this->assertEquals($data, Cache::get('array'));
+    }
+
+    public function testStoresIntegers(): void
+    {
+        Cache::put('int', 42);
+        $this->assertSame(42, Cache::get('int'));
+    }
+
+    public function testStoresBooleans(): void
+    {
+        Cache::put('bool_true', true);
+        Cache::put('bool_false', false);
+        
+        $this->assertTrue(Cache::get('bool_true'));
+        $this->assertFalse(Cache::get('bool_false'));
+    }
+
+    public function testStoresNull(): void
+    {
+        Cache::put('null_value', null);
+        $this->assertNull(Cache::get('null_value'));
+        $this->assertTrue(Cache::has('null_value'));
+    }
 }

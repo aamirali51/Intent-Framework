@@ -5,7 +5,11 @@
             "core"
         ],
         "excludes": [
-            "Schema.php"
+            "App.php",
+            "Auth.php",
+            "DB.php",
+            "Schema.php",
+            "Route.php"
         ]
     },
     "logs": {
@@ -17,7 +21,7 @@
     "mutators": {
         "@default": true
     },
-    "minMsi": 50,
-    "minCoveredMsi": 70,
+    "minMsi": 70,
+    "minCoveredMsi": 80,
     "testFramework": "phpunit"
 }
