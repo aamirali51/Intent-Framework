@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PHP-8.2+-8892BF?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
-  <img src="https://img.shields.io/badge/Tests-62%20Passing-brightgreen?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-69%20Passing-brightgreen?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.0-blue?style=for-the-badge" alt="Version">
 </p>
 
@@ -80,7 +80,7 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 | The Criticism | The Reality Now |
 |---------------|-----------------|
 | "AI-generated slop" | Yes, AI-assisted — and it's clean, tested, and consistent |
-| "No tests" | **62 tests, 112 assertions** via PHPUnit |
+| "No tests" | **69 tests, 124 assertions** via PHPUnit |
 | "Incomplete" | v0.3.0 has middleware, auth, sessions, events, cache, CLI |
 | "No Composer" | Full `composer.json`, PSR-4 autoloading, proper `vendor/` |
 | "Bad structure" | `public/` separation, `core/` for framework, `app/` for user code |
@@ -163,7 +163,7 @@ composer test
 vendor/bin/phpunit
 ```
 
-**Current coverage:** 62 tests, 112 assertions
+**Current coverage:** 69 tests, 124 assertions
 
 ---
 
@@ -198,7 +198,7 @@ vendor/bin/phpunit
 ## 🗺️ Roadmap
 
 - [ ] Route groups with shared middleware
-- [ ] CSRF protection middleware
+- [x] CSRF protection middleware
 - [ ] Rate limiting middleware
 - [ ] `intent/auth` package (OAuth, API tokens)
 - [ ] Full CMS demo application

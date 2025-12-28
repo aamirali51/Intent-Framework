@@ -149,6 +149,32 @@ DB::table('users')->where('id', 1)->update(['name' => 'Jane']);
 DB::table('users')->where('id', 1)->delete();
 ```
 
+### 3.11 CSRF Protection
+```php
+// In forms - use helper
+<form method="POST">
+    <?= csrf_field() ?>
+    <input type="text" name="email">
+</form>
+
+// Or manually
+<input type="hidden" name="_token" value="<?= csrf_token() ?>">
+
+// AJAX requests - send via header
+fetch('/api/data', {
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': csrfToken }
+});
+
+// Apply middleware to routes
+Route::post('/submit', $handler)->middleware(CsrfMiddleware::class);
+
+// Token also accepted from:
+// - POST body: _token
+// - JSON body: { "_token": "..." }
+// - Headers: X-CSRF-TOKEN or X-XSRF-TOKEN
+```
+
 ---
 
 ## 4. Helpers
@@ -166,6 +192,8 @@ DB::table('users')->where('id', 1)->delete();
 | `user()` | Current user |
 | `event($name, $data)` | Dispatch event |
 | `cache($key, $value)` | Get/set cache |
+| `csrf_token()` | Get CSRF token |
+| `csrf_field()` | Hidden input field |
 | `dd($vars)` | Dump and die |
 
 ---
@@ -202,7 +230,7 @@ vendor\bin\phpunit         # Direct run
 ```
 
 **Test Coverage:**
-- 62 tests, 112 assertions
+- 69 tests, 124 assertions
 - Config, Response, Router, Validator, Pipeline, Session, Event, Cache
 
 ---
@@ -216,6 +244,7 @@ vendor\bin\phpunit         # Direct run
 | SQL | Prepared statements in DB |
 | Schema | Dev-only, disabled in prod |
 | Sessions | Regenerated on login |
+| CSRF | Token validation via middleware |
 
 ---
 
