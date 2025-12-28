@@ -353,3 +353,35 @@ if (!function_exists('logger')) {
     }
 }
 
+if (!function_exists('upload')) {
+    /**
+     * Get an upload instance.
+     */
+    function upload(string $key): \Core\Upload
+    {
+        return \Core\Upload::file($key);
+    }
+}
+
+if (!function_exists('slug')) {
+    /**
+     * Generate a URL-safe slug from a string.
+     */
+    function slug(string $text, string $separator = '-'): string
+    {
+        // Convert to lowercase
+        $text = mb_strtolower($text, 'UTF-8');
+        
+        // Replace non-alphanumeric characters with separator
+        $text = preg_replace('/[^a-z0-9]+/', $separator, $text);
+        
+        // Remove leading/trailing separators
+        $text = trim($text, $separator);
+        
+        // Remove duplicate separators
+        $text = preg_replace('/' . preg_quote($separator, '/') . '+/', $separator, $text);
+        
+        return $text;
+    }
+}
+
