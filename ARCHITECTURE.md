@@ -323,7 +323,7 @@ vendor\bin\phpunit         # Direct run
 ```
 
 **Test Coverage:**
-- 69 tests, 124 assertions
+- 107 tests, 177 assertions
 - Config, Response, Router, Validator, Pipeline, Session, Event, Cache
 
 ---
