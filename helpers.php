@@ -310,3 +310,46 @@ if (!function_exists('csrf_field')) {
         return '<input type="hidden" name="_token" value="' . htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
     }
 }
+
+if (!function_exists('log_message')) {
+    /**
+     * Log a message to the log file.
+     * 
+     * WHY: Quick logging without using Log class directly.
+     * 
+     * Usage:
+     *   log_message('info', 'User logged in', ['user_id' => 123]);
+     *   log_message('error', 'Payment failed');
+     */
+    function log_message(string $level, string $message, array $context = []): void
+    {
+        \Core\Log::log($level, $message, $context);
+    }
+}
+
+if (!function_exists('logger')) {
+    /**
+     * Get the logger or log a message.
+     * 
+     * WHY: Flexible logging access.
+     * 
+     * Usage:
+     *   logger()->info('Message');         // Get logger
+     *   logger('info', 'User login');      // Quick log
+     */
+    function logger(?string $level = null, ?string $message = null, array $context = []): object
+    {
+        if ($level !== null && $message !== null) {
+            \Core\Log::log($level, $message, $context);
+        }
+
+        return new class {
+            public function debug(string $msg, array $ctx = []): void { \Core\Log::debug($msg, $ctx); }
+            public function info(string $msg, array $ctx = []): void { \Core\Log::info($msg, $ctx); }
+            public function warning(string $msg, array $ctx = []): void { \Core\Log::warning($msg, $ctx); }
+            public function error(string $msg, array $ctx = []): void { \Core\Log::error($msg, $ctx); }
+            public function critical(string $msg, array $ctx = []): void { \Core\Log::critical($msg, $ctx); }
+        };
+    }
+}
+

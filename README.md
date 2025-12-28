@@ -197,9 +197,11 @@ vendor/bin/phpunit
 
 ## 🗺️ Roadmap
 
-- [ ] Route groups with shared middleware
+- [x] Route groups with shared middleware
 - [x] CSRF protection middleware
-- [ ] Rate limiting middleware
+- [x] Rate limiting middleware
+- [x] Logging system (`Log` class + helpers)
+- [x] Package auto-discovery bootstrap
 - [ ] `intent/auth` package (OAuth, API tokens)
 - [ ] Full CMS demo application
 - [ ] Package ecosystem

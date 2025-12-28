@@ -175,6 +175,94 @@ Route::post('/submit', $handler)->middleware(CsrfMiddleware::class);
 // - Headers: X-CSRF-TOKEN or X-XSRF-TOKEN
 ```
 
+### 3.12 Route Groups
+```php
+// Group with prefix
+Route::group(['prefix' => '/admin'], function () {
+    Route::get('/dashboard', $handler);  // /admin/dashboard
+    Route::get('/users', $handler);      // /admin/users
+});
+
+// Group with middleware
+Route::group(['middleware' => AuthMiddleware::class], function () {
+    Route::get('/profile', $handler);
+    Route::post('/settings', $handler);
+});
+
+// Shorthand methods
+Route::prefix('/api/v1', function () {
+    Route::get('/users', $handler);      // /api/v1/users
+});
+
+Route::middleware(CsrfMiddleware::class, function () {
+    Route::post('/submit', $handler);
+});
+
+// Nested groups
+Route::group(['prefix' => '/api'], function () {
+    Route::group(['prefix' => '/v1', 'middleware' => ApiMiddleware::class], function () {
+        Route::get('/users', $handler);  // /api/v1/users
+    });
+});
+```
+
+---
+
+### 3.13 Rate Limiting
+```php
+// Default: 60 requests per minute
+Route::post('/api/login', $handler)->middleware(RateLimitMiddleware::class);
+
+// Custom limits (5 requests per 60 seconds)
+Route::post('/api/login', $handler)->middleware(new RateLimitMiddleware(5, 60));
+
+// Response headers added:
+// X-RateLimit-Limit: 60
+// X-RateLimit-Remaining: 57
+
+// Exceeding limit returns 429 Too Many Requests
+```
+
+### 3.14 Logging
+```php
+// Using Log class directly
+Log::info('User logged in', ['user_id' => 123]);
+Log::error('Payment failed', ['order_id' => 456]);
+Log::debug('Debug message');
+Log::warning('Low disk space');
+Log::critical('Database connection lost');
+
+// Using helper functions
+logger()->info('Message');
+logger('error', 'Something failed');
+log_message('info', 'User login', ['id' => 1]);
+
+// Logs stored in storage/logs/YYYY-MM-DD.log
+Log::read();              // Read today's log
+Log::read('2024-01-15');  // Read specific date
+Log::clear();             // Clear all logs
+```
+
+### 3.15 Package Auto-Discovery
+```php
+// Packages define providers in composer.json:
+// "extra": {
+//     "intent": {
+//         "providers": ["Vendor\\Package\\ServiceProvider"]
+//     }
+// }
+
+// Boot all discovered packages
+Package::boot();
+
+// Manual registration
+Package::register(MyServiceProvider::class);
+
+// Check packages
+Package::all();           // All discovered packages
+Package::has('vendor/pkg'); // Check if discovered
+```
+
 ---
 
 ## 4. Helpers
@@ -182,7 +270,10 @@ Route::post('/submit', $handler)->middleware(CsrfMiddleware::class);
 | Helper | Usage |
 |--------|-------|
 | `config($key)` | Get config value |
+| `env($key)` | Get environment variable |
 | `view($name, $data)` | Render template |
+| `request()` | Get Request instance |
+| `response()` | Get Response instance |
 | `json($data, $status)` | JSON response |
 | `redirect($url)` | Redirect |
 | `validate($data, $rules)` | Validate input |
@@ -194,6 +285,8 @@ Route::post('/submit', $handler)->middleware(CsrfMiddleware::class);
 | `cache($key, $value)` | Get/set cache |
 | `csrf_token()` | Get CSRF token |
 | `csrf_field()` | Hidden input field |
+| `logger()` | Logging access |
+| `log_message($lvl, $msg)` | Log a message |
 | `dd($vars)` | Dump and die |
 
 ---
@@ -245,6 +338,7 @@ vendor\bin\phpunit         # Direct run
 | Schema | Dev-only, disabled in prod |
 | Sessions | Regenerated on login |
 | CSRF | Token validation via middleware |
+| Rate Limiting | Cache-based request throttling |
 
 ---
 
@@ -267,8 +361,10 @@ vendor\bin\phpunit         # Direct run
 | core/Schema.php | Auto-schema |
 | core/Session.php | Sessions |
 | core/Validator.php | Validation |
+| core/Log.php | File-based logging |
+| core/Package.php | Package auto-discovery |
 
-**Total: ~3000 lines of core code**
+**Total: ~3500 lines of core code**
 
 ---
 
