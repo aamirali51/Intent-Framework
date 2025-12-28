@@ -48,3 +48,32 @@ jobs:
       
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --error-format=github
+
+  infection:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, pcov
+          coverage: pcov
+      
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      
+      - name: Generate coverage
+        run: vendor/bin/phpunit --coverage-xml=coverage/coverage-xml --log-junit=coverage/junit.xml
+      
+      - name: Run Infection
+        env:
+          STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
+        run: |
+          vendor/bin/infection \
+            --threads=4 \
+            --coverage=coverage \
+            --skip-initial-tests \
+            --logger-github

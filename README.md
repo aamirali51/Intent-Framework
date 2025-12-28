@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/aamirali51/Intent-Framework/actions"><img src="https://github.com/aamirali51/Intent-Framework/workflows/CI/badge.svg" alt="CI Status"></a>
+  <a href="https://dashboard.stryker-mutator.io/reports/github.com/aamirali51/Intent-Framework/main"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Faamirali51%2FIntent-Framework%2Fmain" alt="Mutation testing badge"></a>
 </p>
 
 <h1 align="center">Intent Framework</h1>

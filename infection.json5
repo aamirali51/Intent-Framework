@@ -1,0 +1,23 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "core"
+        ],
+        "excludes": [
+            "Schema.php"
+        ]
+    },
+    "logs": {
+        "text": "infection.log",
+        "stryker": {
+            "badge": "/^main$/"
+        }
+    },
+    "mutators": {
+        "@default": true
+    },
+    "minMsi": 50,
+    "minCoveredMsi": 70,
+    "testFramework": "phpunit"
+}
