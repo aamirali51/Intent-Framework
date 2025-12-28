@@ -199,4 +199,67 @@ class CacheTest extends TestCase
         $this->assertNull(Cache::get('null_value'));
         $this->assertTrue(Cache::has('null_value'));
     }
+
+    /**
+     * Test forever() method
+     * Kills mutant: forever($key, $value, -1)
+     * Kills mutant: protected static function forever()
+     */
+    public function testForeverMethod(): void
+    {
+        Cache::forever('permanent', 'forever_value');
+        
+        sleep(2);
+        $this->assertTrue(Cache::has('permanent'));
+        $this->assertEquals('forever_value', Cache::get('permanent'));
+    }
+
+    /**
+     * Test that expired items return DEFAULT value
+     * Kills mutant: return $default removal
+     */
+    public function testExpiredReturnsDefault(): void
+    {
+        Cache::put('temp', 'value', 1);
+        sleep(2);
+        
+        // Should return default when expired
+        $result = Cache::get('temp', 'fallback');
+        $this->assertEquals('fallback', $result);
+    }
+
+    /**
+     * Test that expired items are forgotten (removed from cache)
+     * Kills mutant: self::forget($key) removal
+     */
+    public function testExpiredItemsAreForgotten(): void
+    {
+        Cache::put('expire_forget', 'value', 1);
+        sleep(2);
+        
+        // First get should trigger forget
+        Cache::get('expire_forget');
+        
+        // has() should return false after forget
+        $this->assertFalse(Cache::has('expire_forget'));
+    }
+
+    /**
+     * Test expiration check on get
+     * Kills mutant: if expires > 0 && expires < time()
+     */
+    public function testExpirationCheckOnGet(): void
+    {
+        Cache::put('check_expire', 'test', 1);
+        
+        // Before expiration - should exist
+        $this->assertTrue(Cache::has('check_expire'));
+        $this->assertEquals('test', Cache::get('check_expire'));
+        
+        sleep(2);
+        
+        // After expiration - should be gone
+        $this->assertNull(Cache::get('check_expire'));
+        $this->assertFalse(Cache::has('check_expire'));
+    }
 }
