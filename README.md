@@ -168,13 +168,8 @@ Visit **http://localhost:8080** — you should see the welcome page.
 
 ## 📚 Documentation
 
-Full technical documentation is in [`ARCHITECTURE.md`](./ARCHITECTURE.md):
-
-- Directory structure
-- All 15 core classes explained
-- Every helper function
-- Security features
-- Configuration options
+- **[API Reference](./API.md)** — Complete API with input/output types for every method
+- **[Architecture](./ARCHITECTURE.md)** — Technical docs, directory structure, and internals
 
 ---
 
