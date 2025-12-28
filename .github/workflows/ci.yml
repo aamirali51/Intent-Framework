@@ -24,6 +24,13 @@ jobs:
           extensions: mbstring, json
           coverage: none
       
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
       
@@ -43,14 +50,23 @@ jobs:
           extensions: mbstring, json
           coverage: none
       
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
       
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --error-format=github
 
+  # Mutation testing - runs only on push to main (not on PRs to save time)
   infection:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     
     steps:
       - uses: actions/checkout@v4
@@ -62,6 +78,13 @@ jobs:
           extensions: mbstring, json, dom, libxml
           coverage: pcov
       
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
       
@@ -72,6 +95,6 @@ jobs:
           vendor/bin/infection \
             --threads=4 \
             --logger-github \
-            --only-covered \
+            --only-covering-test-cases \
             --min-msi=50 \
             --min-covered-msi=70
