@@ -7,7 +7,7 @@ namespace Core;
 /**
  * Simple, explicit router.
  * 
- * Supports per-route middleware (no global stack).
+ * Supports per-route middleware and route groups.
  * Just method + path = handler + optional middleware.
  */
 final class Router
@@ -20,6 +20,9 @@ final class Router
 
     /** @var array Middleware for the last registered route */
     private array $lastRoute = ['method' => '', 'path' => '', 'isDynamic' => false];
+
+    /** @var array Current group stack for nested groups */
+    private array $groupStack = [];
 
     /**
      * Register a GET route.
@@ -65,16 +68,70 @@ final class Router
     }
 
     /**
+     * Create a route group with shared attributes.
+     * 
+     * @param array{prefix?: string, middleware?: array|string} $attributes
+     * @param callable $callback
+     */
+    public function group(array $attributes, callable $callback): void
+    {
+        // Push group onto stack
+        $this->groupStack[] = $attributes;
+
+        // Execute callback (registers routes)
+        $callback($this);
+
+        // Pop group from stack
+        array_pop($this->groupStack);
+    }
+
+    /**
+     * Get the current group prefix.
+     */
+    private function getGroupPrefix(): string
+    {
+        $prefix = '';
+        foreach ($this->groupStack as $group) {
+            if (isset($group['prefix'])) {
+                $prefix .= '/' . trim($group['prefix'], '/');
+            }
+        }
+        return $prefix;
+    }
+
+    /**
+     * Get the current group middleware.
+     */
+    private function getGroupMiddleware(): array
+    {
+        $middleware = [];
+        foreach ($this->groupStack as $group) {
+            if (isset($group['middleware'])) {
+                $groupMiddleware = is_array($group['middleware']) 
+                    ? $group['middleware'] 
+                    : [$group['middleware']];
+                $middleware = array_merge($middleware, $groupMiddleware);
+            }
+        }
+        return $middleware;
+    }
+
+    /**
      * Add a route.
      */
     public function add(string $method, string $path, callable $handler): self
     {
+        // Apply group prefix
+        $prefix = $this->getGroupPrefix();
+        $path = $prefix . '/' . trim($path, '/');
         $path = '/' . trim($path, '/');
+        
         $isDynamic = str_contains($path, '{');
 
+        // Apply group middleware
         $routeData = [
             'handler' => $handler,
-            'middleware' => [],
+            'middleware' => $this->getGroupMiddleware(),
         ];
 
         if ($isDynamic) {

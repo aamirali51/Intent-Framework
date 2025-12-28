@@ -80,4 +80,37 @@ final class Route
     {
         return self::getRouter()->add($method, $path, $handler);
     }
+
+    /**
+     * Create a route group with shared attributes.
+     * 
+     * Usage:
+     *   Route::group(['prefix' => '/admin', 'middleware' => AuthMiddleware::class], function () {
+     *       Route::get('/dashboard', $handler);
+     *       Route::get('/users', $handler);
+     *   });
+     * 
+     * @param array{prefix?: string, middleware?: array|string} $attributes
+     * @param callable $callback
+     */
+    public static function group(array $attributes, callable $callback): void
+    {
+        self::getRouter()->group($attributes, $callback);
+    }
+
+    /**
+     * Shorthand for prefix-only group.
+     */
+    public static function prefix(string $prefix, callable $callback): void
+    {
+        self::group(['prefix' => $prefix], $callback);
+    }
+
+    /**
+     * Shorthand for middleware-only group.
+     */
+    public static function middleware(array|string $middleware, callable $callback): void
+    {
+        self::group(['middleware' => $middleware], $callback);
+    }
 }
