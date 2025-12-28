@@ -2,7 +2,12 @@
   <img src="https://img.shields.io/badge/PHP-8.2+-8892BF?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
   <img src="https://img.shields.io/badge/Tests-69%20Passing-brightgreen?style=for-the-badge" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.3.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/PHPStan-Level%205-4ade80?style=for-the-badge" alt="PHPStan Level 5">
+  <img src="https://img.shields.io/badge/Version-0.4.0-blue?style=for-the-badge" alt="Version">
+</p>
+
+<p align="center">
+  <a href="https://github.com/aamirali51/Intent-Framework/actions"><img src="https://github.com/aamirali51/Intent-Framework/workflows/CI/badge.svg" alt="CI Status"></a>
 </p>
 
 <h1 align="center">Intent Framework</h1>

@@ -1,0 +1,21 @@
+parameters:
+    level: 5
+    paths:
+        - core
+        - app
+        - helpers.php
+    excludePaths:
+        - vendor
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # Allow generic array types
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics
+        # Allow unused class constants (documentation)
+        - identifier: classConstant.unused
+        # Allow return type issues in never-returning methods
+        - identifier: return.unusedType
+        # Allow defensive null coalesce usage
+        - identifier: nullCoalesce.offset

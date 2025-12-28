@@ -1,6 +1,6 @@
 # Intent Framework - Technical Documentation
 
-> **Version:** 0.3.0  
+> **Version:** 0.4.0  
 > **PHP Version:** 8.2+  
 > **Architecture:** AI-native, zero-boilerplate micro-framework
 
