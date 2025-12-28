@@ -59,14 +59,11 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, json, pcov
+          extensions: mbstring, json, dom, libxml
           coverage: pcov
       
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
-      
-      - name: Generate coverage
-        run: vendor/bin/phpunit --coverage-xml=coverage/coverage-xml --log-junit=coverage/junit.xml
       
       - name: Run Infection
         env:
@@ -74,6 +71,7 @@ jobs:
         run: |
           vendor/bin/infection \
             --threads=4 \
-            --coverage=coverage \
-            --skip-initial-tests \
-            --logger-github
+            --logger-github \
+            --only-covered \
+            --min-msi=50 \
+            --min-covered-msi=70
