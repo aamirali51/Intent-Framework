@@ -35,7 +35,7 @@ if (!function_exists('view')) {
      */
     function view(string $name, array $data = []): string
     {
-        $path = BASE_PATH . '/views/' . $name . '.php';
+        $path = BASE_PATH . '/resources/views/' . $name . '.php';
         
         if (!file_exists($path)) {
             throw new RuntimeException("View not found: {$name}");

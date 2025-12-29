@@ -27,38 +27,47 @@ INTENT/
 │   ├── index.php          # Single entry point
 │   └── .htaccess          # Apache rewriting
 │
-├── core/                   # Framework kernel
-│   ├── App.php            # Application orchestrator
-│   ├── Auth.php           # Authentication
-│   ├── Cache.php          # File-based caching
-│   ├── Config.php         # Configuration
-│   ├── DB.php             # Query builder
-│   ├── Event.php          # Event dispatcher
-│   ├── Middleware.php     # Middleware interface
-│   ├── Pipeline.php       # Middleware execution
-│   ├── Registry.php      # Service registry
-│   ├── Request.php        # HTTP request
-│   ├── Response.php       # HTTP response
-│   ├── Route.php          # Route facade
-│   ├── Router.php         # Routing
-│   ├── Schema.php         # Dev-only schema
-│   ├── Session.php        # Session management
-│   └── Validator.php      # Input validation
+├── src/                    # Framework source (PDS)
+│   ├── Core/              # Framework kernel
+│   │   ├── App.php        # Application orchestrator
+│   │   ├── Auth.php       # Authentication
+│   │   ├── Cache.php      # File-based caching
+│   │   ├── Config.php     # Configuration
+│   │   ├── DB.php         # Query builder
+│   │   ├── Event.php      # Event dispatcher
+│   │   ├── Log.php        # Logging
+│   │   ├── Middleware.php # Middleware interface
+│   │   ├── Package.php    # Package discovery
+│   │   ├── Paginator.php  # Pagination
+│   │   ├── Pipeline.php   # Middleware execution
+│   │   ├── Registry.php   # Service registry
+│   │   ├── Request.php    # HTTP request
+│   │   ├── Response.php   # HTTP response
+│   │   ├── Route.php      # Route facade
+│   │   ├── Router.php     # Routing
+│   │   ├── Schema.php     # Dev-only schema
+│   │   ├── Session.php    # Session management
+│   │   ├── Upload.php     # File uploads
+│   │   └── Validator.php  # Input validation
+│   └── helpers.php        # Global helpers
 │
-├── app/
+├── config/                 # Configuration files
+│   ├── app.php            # Application config
+│   └── routes.php         # Route definitions
+│
+├── app/                    # User application code
 │   ├── Api/               # File-based routes
 │   ├── Handlers/          # Route handlers
 │   ├── Middleware/        # Custom middleware
 │   └── Models/            # Data models
 │
-├── views/                  # Templates
+├── resources/              # Application resources
+│   └── views/             # Templates
+│
 ├── storage/                # Cache, logs, uploads
 ├── tests/                  # PHPUnit tests
-├── config.php              # Configuration
-├── routes.php              # Route definitions
-├── helpers.php             # Global helpers
 ├── intent                  # CLI tool
-└── composer.json           # Autoloading
+└── composer.json           # Autoloading (PSR-4)
 ```
 
 ---
@@ -347,26 +356,26 @@ vendor\bin\phpunit         # Direct run
 
 | File | Purpose |
 |------|---------|
-| core/App.php | Main orchestrator |
-| core/Auth.php | Authentication |
-| core/Cache.php | File caching |
-| core/Config.php | Configuration |
-| core/DB.php | Query builder |
-| core/Event.php | Event dispatcher |
-| core/Middleware.php | Interface |
-| core/Pipeline.php | Middleware runner |
-| core/Request.php | HTTP request |
-| core/Response.php | HTTP response |
-| core/Route.php | Route facade |
-| core/Router.php | Routing |
-| core/Schema.php | Auto-schema |
-| core/Session.php | Sessions |
-| core/Validator.php | Validation |
-| core/Log.php | File-based logging |
-| core/Package.php | Package auto-discovery |
-| core/Registry.php | Service registry |
-| core/Upload.php | File upload handling |
-| core/Paginator.php | Pagination helper |
+| src/Core/App.php | Main orchestrator |
+| src/Core/Auth.php | Authentication |
+| src/Core/Cache.php | File caching |
+| src/Core/Config.php | Configuration |
+| src/Core/DB.php | Query builder |
+| src/Core/Event.php | Event dispatcher |
+| src/Core/Middleware.php | Interface |
+| src/Core/Pipeline.php | Middleware runner |
+| src/Core/Request.php | HTTP request |
+| src/Core/Response.php | HTTP response |
+| src/Core/Route.php | Route facade |
+| src/Core/Router.php | Routing |
+| src/Core/Schema.php | Auto-schema |
+| src/Core/Session.php | Sessions |
+| src/Core/Validator.php | Validation |
+| src/Core/Log.php | File-based logging |
+| src/Core/Package.php | Package auto-discovery |
+| src/Core/Registry.php | Service registry |
+| src/Core/Upload.php | File upload handling |
+| src/Core/Paginator.php | Pagination helper |
 
 **Total: ~4000 lines of core code**
 

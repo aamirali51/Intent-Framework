@@ -33,6 +33,6 @@ return [
     'db.pass' => '',
 
     // Paths
-    'path.views' => BASE_PATH . '/app/views',
+    'path.views' => BASE_PATH . '/resources/views',
     'path.cache' => BASE_PATH . '/storage/cache',
 ];

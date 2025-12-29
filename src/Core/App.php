@@ -18,7 +18,7 @@ final class App
     public function __construct()
     {
         // Load config
-        Config::load(BASE_PATH . '/config.php');
+        Config::load(BASE_PATH . '/config/app.php');
 
         // Create instances
         $this->request = new Request();
@@ -272,10 +272,10 @@ HTML;
      */
     private function loadRoutes(): void
     {
-        $routesFile = BASE_PATH . '/routes.php';
+        $routesFile = BASE_PATH . '/config/routes.php';
 
         if (!file_exists($routesFile)) {
-            throw new \RuntimeException('Routes file not found: routes.php');
+            throw new \RuntimeException('Routes file not found: config/routes.php');
         }
 
         $router = $this->router;
@@ -308,7 +308,7 @@ HTML;
         // Welcome page - only if '/' is not already registered
         if (!$this->router->hasRoute('GET', '/')) {
             $this->router->get('/', function (Request $request, Response $response): Response {
-                $welcomeFile = BASE_PATH . '/views/welcome.php';
+                $welcomeFile = BASE_PATH . '/resources/views/welcome.php';
                 
                 if (!file_exists($welcomeFile)) {
                     return $response->html('<h1>Intent Framework</h1><p>It works!</p>');

@@ -20,7 +20,7 @@ require __DIR__ . '/vendor/autoload.php';
 define('BASE_PATH', __DIR__);
 
 // Load config
-Core\Config::load(BASE_PATH . '/config.php');
+Core\Config::load(BASE_PATH . '/config/app.php');
 
 // Colors
 const GREEN = "\033[32m";
@@ -184,13 +184,13 @@ PHP;
 
 function listRoutes(): void {
     title("Registered Routes");
-    info("Routes are defined in routes.php");
+    info("Routes are defined in config/routes.php");
     echo PHP_EOL;
     
     // Load routes to display
-    require BASE_PATH . '/routes.php';
+    require BASE_PATH . '/config/routes.php';
     
-    success("Routes loaded from routes.php");
+    success("Routes loaded from config/routes.php");
 }
 
 function help(): void {
