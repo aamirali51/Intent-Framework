@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PHP-8.2+-8892BF?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
-  <img src="https://img.shields.io/badge/Tests-119%20Passing-brightgreen?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-161%20Passing-brightgreen?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/PHPStan-Level%208-4ade80?style=for-the-badge" alt="PHPStan Level 8">
   <img src="https://img.shields.io/badge/Version-0.4.0-blue?style=for-the-badge" alt="Version">
 </p>
@@ -92,7 +92,7 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 | The Criticism | The Reality Now |
 |---------------|-----------------|
 | "AI-generated slop" | Yes, AI-assisted — and it's clean, tested, and consistent |
-| "No tests" | **107 tests, 177 assertions** via PHPUnit |
+| "No tests" | **161 tests, 298 assertions** via PHPUnit |
 | "Incomplete" | v0.3.0 has middleware, auth, sessions, events, cache, CLI |
 | "No Composer" | Full `composer.json`, PSR-4 autoloading, proper `vendor/` |
 | "Bad structure" | `public/` separation, `core/` for framework, `app/` for user code |
@@ -109,7 +109,7 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 |------|-------|--------|
 | **PHPStan** | Level 8 | ✅ Passing |
 | **Infection** | MSI 74%+ | ✅ Passing |
-| **PHPUnit** | 119 tests | ✅ Passing |
+| **PHPUnit** | 161 tests | ✅ Passing |
 | **GitHub Actions** | CI/CD | ✅ Automated |
 
 > All quality checks run automatically on every push and pull request.
@@ -166,6 +166,20 @@ Visit **http://localhost:8080** — you should see the welcome page.
 
 ---
 
+## 🛠️ CLI Commands
+
+```bash
+php intent --help            # Show all available commands
+php intent serve             # Start dev server (port 8080)
+php intent serve 3000        # Custom port
+php intent cache:clear       # Clear all cached data
+php intent make:handler      # Create a handler class
+php intent make:middleware   # Create a middleware class
+php intent routes            # List registered routes
+```
+
+---
+
 ## 📚 Documentation
 
 - **[API Reference](./API.md)** — Complete API with input/output types for every method
@@ -183,7 +197,7 @@ composer test
 vendor/bin/phpunit
 ```
 
-**Current coverage:** 107 tests, 177 assertions
+**Current coverage:** 161 tests, 298 assertions
 
 ---
 
