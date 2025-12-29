@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  ~3,000 lines of core code. No magic. No facades. No containers.<br>
+  ~3,000 lines of core code. No magic. No facades. No providers.<br>
   Just PHP that reads like English.
 </p>
 

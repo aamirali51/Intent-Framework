@@ -10,7 +10,7 @@
 
 | Principle | Implementation |
 |-----------|----------------|
-| **Zero Boilerplate** | No service containers, providers, or facades |
+| **Zero Boilerplate** | No service providers or facades |
 | **Explicit over Magic** | No annotations, attributes, or hidden behavior |
 | **Minimal Abstraction** | Thin wrappers, not deep hierarchies |
 | **AI-Native** | Predictable patterns for AI-assisted development |
@@ -36,6 +36,7 @@ INTENT/
 │   ├── Event.php          # Event dispatcher
 │   ├── Middleware.php     # Middleware interface
 │   ├── Pipeline.php       # Middleware execution
+│   ├── Registry.php      # Service registry
 │   ├── Request.php        # HTTP request
 │   ├── Response.php       # HTTP response
 │   ├── Route.php          # Route facade
@@ -323,8 +324,8 @@ vendor\bin\phpunit         # Direct run
 ```
 
 **Test Coverage:**
-- 107 tests, 177 assertions
-- Config, Response, Router, Validator, Pipeline, Session, Event, Cache
+- 161 tests, 298 assertions
+- Config, Response, Router, Validator, Pipeline, Session, Event, Cache, Registry, Upload, Paginator
 
 ---
 
@@ -363,8 +364,11 @@ vendor\bin\phpunit         # Direct run
 | core/Validator.php | Validation |
 | core/Log.php | File-based logging |
 | core/Package.php | Package auto-discovery |
+| core/Registry.php | Service registry |
+| core/Upload.php | File upload handling |
+| core/Paginator.php | Pagination helper |
 
-**Total: ~3500 lines of core code**
+**Total: ~4000 lines of core code**
 
 ---
 
