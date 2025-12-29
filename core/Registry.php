@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace Core;
 
 /**
- * Minimal service container.
+ * Minimal service registry.
  * 
  * Enables testability without Laravel complexity.
  * Just: bind a name to a factory, resolve by name.
  * 
  * Usage:
- *   Container::bind('cache', fn() => new FileCache());
- *   $cache = Container::make('cache');
+ *   Registry::bind('cache', fn() => new FileCache());
+ *   $cache = Registry::make('cache');
  * 
  * Testing:
- *   Container::bind('cache', fn() => new ArrayCache());
+ *   Registry::bind('cache', fn() => new ArrayCache());
  */
-final class Container
+final class Registry
 {
     /** @var array<string, callable> */
     private static array $bindings = [];

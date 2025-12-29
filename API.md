@@ -15,7 +15,7 @@
 7. [Cache](#cache)
 8. [Auth](#auth)
 9. [Event](#event)
-10. [Container](#container)
+10. [Registry](#registry)
 11. [Log](#log)
 12. [Config](#config)
 13. [Helper Functions](#helper-functions)
@@ -959,11 +959,11 @@ Remove all listeners.
 
 ---
 
-## Container
+## Registry
 
-**Class:** `Core\Container`
+**Class:** `Core\Registry`
 
-Minimal service container for testability. Bind, singleton, resolve.
+Minimal service registry for testability. Bind, singleton, resolve.
 
 ### Methods
 
@@ -972,8 +972,8 @@ Minimal service container for testability. Bind, singleton, resolve.
 Bind a factory to a key. Called fresh each resolution.
 
 ```php
-Container::bind('cache', fn() => new FileCache());
-$cache = Container::make('cache');
+Registry::bind('cache', fn() => new FileCache());
+$cache = Registry::make('cache');
 ```
 
 #### `singleton(string $id, callable $factory): void`
@@ -981,8 +981,8 @@ $cache = Container::make('cache');
 Bind as singleton (resolved once, cached).
 
 ```php
-Container::singleton('db', fn() => new PDO($dsn));
-$db = Container::make('db');  // Same instance every time
+Registry::singleton('db', fn() => new PDO($dsn));
+$db = Registry::make('db');  // Same instance every time
 ```
 
 #### `instance(string $id, object $instance): void`
@@ -991,7 +991,7 @@ Bind an existing instance directly.
 
 ```php
 $mockCache = new ArrayCache();
-Container::instance('cache', $mockCache);
+Registry::instance('cache', $mockCache);
 ```
 
 #### `make(string $id): mixed`
@@ -999,7 +999,7 @@ Container::instance('cache', $mockCache);
 Resolve a binding.
 
 ```php
-$cache = Container::make('cache');
+$cache = Registry::make('cache');
 ```
 
 #### `has(string $id): bool`
@@ -1007,8 +1007,8 @@ $cache = Container::make('cache');
 Check if binding exists.
 
 ```php
-if (Container::has('cache')) {
-    $cache = Container::make('cache');
+if (Registry::has('cache')) {
+    $cache = Registry::make('cache');
 }
 ```
 
@@ -1022,7 +1022,7 @@ Clear all bindings (for testing).
 
 ```php
 // In test tearDown
-Container::flush();
+Registry::flush();
 ```
 
 #### `keys(): array`
@@ -1037,12 +1037,12 @@ class CacheTest extends TestCase
     protected function setUp(): void
     {
         // Swap file cache with array cache for testing
-        Container::bind('cache', fn() => new ArrayCache());
+        Registry::bind('cache', fn() => new ArrayCache());
     }
 
     protected function tearDown(): void
     {
-        Container::flush();
+        Registry::flush();
     }
 }
 ```
