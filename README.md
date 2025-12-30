@@ -1,12 +1,14 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PHP-8.2+-8892BF?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
-  <img src="https://img.shields.io/badge/Tests-161%20Passing-brightgreen?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-169%20Passing-brightgreen?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/PHPStan-Level%208-4ade80?style=for-the-badge" alt="PHPStan Level 8">
-  <img src="https://img.shields.io/badge/Version-0.4.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.5.0-blue?style=for-the-badge" alt="Version">
 </p>
 
 <p align="center">
+  <a href="https://packagist.org/packages/intent/framework"><img src="https://img.shields.io/packagist/v/intent/framework.svg?style=flat-square" alt="Latest Version"></a>
+  <a href="https://packagist.org/packages/intent/framework"><img src="https://img.shields.io/packagist/dt/intent/framework.svg?style=flat-square" alt="Total Downloads"></a>
   <a href="https://github.com/aamirali51/Intent-Framework/actions"><img src="https://github.com/aamirali51/Intent-Framework/workflows/CI/badge.svg" alt="CI Status"></a>
   <a href="https://dashboard.stryker-mutator.io/reports/github.com/aamirali51/Intent-Framework/main"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Faamirali51%2FIntent-Framework%2Fmain" alt="Mutation testing badge"></a>
 </p>
@@ -92,10 +94,10 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 | The Criticism | The Reality Now |
 |---------------|-----------------|
 | "AI-generated slop" | Yes, AI-assisted — and it's clean, tested, and consistent |
-| "No tests" | **161 tests, 298 assertions** via PHPUnit |
-| "Incomplete" | v0.3.0 has middleware, auth, sessions, events, cache, CLI |
+| "No tests" | **169 tests, 310 assertions** via PHPUnit |
+| "Incomplete" | v0.5.0 has middleware, auth, sessions, events, cache, CLI, OR conditions, type casting |
 | "No Composer" | Full `composer.json`, PSR-4 autoloading, proper `vendor/` |
-| "Bad structure" | `public/` separation, `core/` for framework, `app/` for user code |
+| "Bad structure" | `public/` separation, `src/Core/` for framework, `app/` for user code |
 | "Just use Laravel" | Sure — if you want facades and service containers. This is the opposite. |
 
 > The whole point of Intent is that it's **readable, predictable, and AI-friendly**.  
@@ -109,7 +111,7 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 |------|-------|--------|
 | **PHPStan** | Level 8 | ✅ Passing |
 | **Infection** | MSI 74%+ | ✅ Passing |
-| **PHPUnit** | 161 tests | ✅ Passing |
+| **PHPUnit** | 169 tests | ✅ Passing |
 | **GitHub Actions** | CI/CD | ✅ Automated |
 
 > All quality checks run automatically on every push and pull request.
@@ -128,7 +130,7 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 | **Events** | Simple dispatcher: `event('user.created', $user)` |
 | **Cache** | File-based: `Cache::remember('key', 3600, $fn)` |
 | **Validator** | 18 rules: `'email' => 'required|email|max:255'` |
-| **Query Builder** | Returns arrays, not objects. `DB::table('users')->get()` |
+| **Query Builder** | OR conditions, type casting, multi-DB support |
 | **Dev Schema** | Auto-creates tables in dev mode (disabled in prod) |
 | **Secure File Routes** | Outside `public/`, in `app/Api/` |
 | **CLI Tool** | `php intent serve`, `php intent make:handler` |
@@ -137,17 +139,18 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 
 ## 📦 Installation
 
-**Option 1: Clone**
-```bash
-git clone https://github.com/yourusername/intent.git my-app
-cd my-app
-composer install
-```
-
-**Option 2: Fresh start**
+**Option 1: Composer (Recommended)**
 ```bash
 composer create-project intent/framework my-app
 cd my-app
+php intent serve
+```
+
+**Option 2: Clone**
+```bash
+git clone https://github.com/aamirali51/Intent-Framework.git my-app
+cd my-app
+composer install
 ```
 
 ---
@@ -197,7 +200,7 @@ composer test
 vendor/bin/phpunit
 ```
 
-**Current coverage:** 161 tests, 298 assertions
+**Current coverage:** 169 tests, 310 assertions
 
 ---
 
