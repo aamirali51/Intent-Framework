@@ -157,7 +157,69 @@ DB::table('users')->where('id', 1)->first();
 DB::table('users')->insert(['name' => 'John']);
 DB::table('users')->where('id', 1)->update(['name' => 'Jane']);
 DB::table('users')->where('id', 1)->delete();
+
+// OR conditions
+DB::table('posts')
+    ->where('status', 'published')
+    ->orWhere('featured', 1)
+    ->get();
+
+// Type casting (automatic)
+DB::table('posts')->insert([
+    'title' => 'Post',
+    'published_at' => new DateTime('2024-01-01'),
+    'is_active' => true
+]);
+
+// Multi-database support
+// MySQL, PostgreSQL, SQLite with automatic identifier escaping
 ```
+
+#### Database Layer Design Decisions
+
+**Combined DB + QueryBuilder Class**
+
+The `Core\DB` class combines connection management, query building, and execution in a single class.
+
+**Rationale:**
+- **Simplicity**: Fewer classes to understand for developers
+- **Micro-framework philosophy**: Prioritize ease of use over separation of concerns
+- **Reduced boilerplate**: Direct API without factory patterns
+
+**Trade-offs:**
+- Less testable in isolation
+- Harder to extend with custom query builders
+- Violates single responsibility principle
+
+**Industry Pattern**: Most frameworks separate these concerns:
+```
+DB/Connection (manages PDO)
+  └─> QueryBuilder (builds queries)
+      └─> Grammar (database-specific SQL)
+```
+
+**Our Approach**: Acceptable for v1.x given micro-framework goals. May revisit in v2.0 if complexity grows.
+
+**Identifier Escaping Strategy**
+
+Automatic escaping of all identifiers based on detected database driver:
+- **MySQL**: Backticks `` `table_name` ``
+- **PostgreSQL/SQLite**: Double quotes `"table_name"`
+
+Benefits: Prevents SQL errors with reserved keywords, improves cross-database compatibility, transparent to developers.
+
+**Type Casting Approach**
+
+Automatic type casting for common PHP types to database equivalents:
+- `DateTimeInterface` → `Y-m-d H:i:s` string
+- `bool` → `1`/`0` integer with `PDO::PARAM_INT`
+- `null` → `NULL` with `PDO::PARAM_NULL`
+- `int` → integer with `PDO::PARAM_INT`
+- `float` → string with `PDO::PARAM_STR` (PDO limitation)
+
+Benefits: Reduces developer friction, prevents common bugs.
+
+**Reference**: Design decisions based on community feedback and industry best practices.
 
 ### 3.11 CSRF Protection
 ```php

@@ -343,6 +343,62 @@ DB::table('users')->whereNull('deleted_at')->get();
 
 Add WHERE NOT NULL clause.
 
+```php
+DB::table('users')->whereNotNull('email_verified_at')->get();
+```
+
+#### `orWhere(string $column, mixed $operatorOrValue, mixed $value = null): self`
+
+Add OR WHERE clause. Allows complex AND/OR combinations.
+
+```php
+// Find posts that are published OR featured
+DB::table('posts')
+    ->where('status', 'published')
+    ->orWhere('featured', 1)
+    ->get();
+
+// Complex conditions: (role = 'admin' AND active = 1) OR role = 'moderator'
+DB::table('users')
+    ->where('role', 'admin')
+    ->where('active', 1)
+    ->orWhere('role', 'moderator')
+    ->get();
+```
+
+#### `orWhereIn(string $column, array $values): self`
+
+Add OR WHERE IN clause.
+
+```php
+DB::table('posts')
+    ->where('author_id', 1)
+    ->orWhereIn('status', ['draft', 'pending'])
+    ->get();
+```
+
+#### `orWhereNull(string $column): self`
+
+Add OR WHERE NULL clause.
+
+```php
+DB::table('posts')
+    ->where('published', 1)
+    ->orWhereNull('deleted_at')
+    ->get();
+```
+
+#### `orWhereNotNull(string $column): self`
+
+Add OR WHERE NOT NULL clause.
+
+```php
+DB::table('users')
+    ->where('role', 'guest')
+    ->orWhereNotNull('subscription_id')
+    ->get();
+```
+
 #### `orderBy(string $column, string $direction = 'ASC'): self`
 
 Add ORDER BY clause.
@@ -455,6 +511,132 @@ Delete matching rows. Returns deleted row count.
 ```php
 $deleted = DB::table('users')->where('id', 1)->delete();
 ```
+
+### Type Casting
+
+The query builder automatically casts values to appropriate database types for better compatibility and correctness.
+
+#### DateTime Objects
+
+`DateTimeInterface` objects are automatically converted to SQL datetime format (`Y-m-d H:i:s`).
+
+```php
+use DateTime;
+use DateTimeImmutable;
+
+DB::table('posts')->insert([
+    'title' => 'My Post',
+    'published_at' => new DateTime('2024-01-01 12:00:00'),
+    'updated_at' => new DateTimeImmutable('now')
+]);
+// Automatically converts to: '2024-01-01 12:00:00' and current timestamp
+```
+
+#### Booleans
+
+Boolean values are converted to integers (1/0) with proper `PDO::PARAM_INT` typing.
+
+```php
+DB::table('users')->insert([
+    'name' => 'John',
+    'is_active' => true,      // Converts to 1 (integer)
+    'is_verified' => false    // Converts to 0 (integer)
+]);
+
+DB::table('posts')->where('published', true)->get();
+// WHERE published = 1
+```
+
+#### Null Values
+
+Null values are properly typed as `PDO::PARAM_NULL`.
+
+```php
+DB::table('posts')->update([
+    'deleted_at' => null  // Properly typed as NULL
+]);
+```
+
+#### Integers and Floats
+
+Integers use `PDO::PARAM_INT`, floats use `PDO::PARAM_STR` (PDO limitation).
+
+```php
+DB::table('products')->insert([
+    'quantity' => 10,        // PDO::PARAM_INT
+    'price' => 19.99        // PDO::PARAM_STR (converted to string)
+]);
+```
+
+### Database Compatibility
+
+The framework supports multiple database drivers with automatic compatibility handling.
+
+#### Supported Databases
+
+- **MySQL** (default) - Full support with backtick identifier escaping
+- **PostgreSQL** - Full support with double-quote identifier escaping  
+- **SQLite** - Full support with double-quote identifier escaping
+
+#### Configuration Examples
+
+**MySQL**:
+```php
+// config/app.php
+'db' => [
+    'driver' => 'mysql',
+    'host' => 'localhost',
+    'port' => 3306,
+    'name' => 'my_database',
+    'user' => 'root',
+    'pass' => 'password'
+]
+```
+
+**SQLite**:
+```php
+'db' => [
+    'driver' => 'sqlite',
+    'name' => '/path/to/database.db',  // Full path to SQLite file
+    // host, port, user, pass not needed for SQLite
+]
+```
+
+**PostgreSQL**:
+```php
+'db' => [
+    'driver' => 'pgsql',
+    'host' => 'localhost',
+    'port' => 5432,
+    'name' => 'my_database',
+    'user' => 'postgres',
+    'pass' => 'password'
+]
+```
+
+#### Identifier Escaping
+
+All table and column names are automatically escaped based on the database driver:
+
+- **MySQL**: Uses backticks `` `table_name` ``
+- **PostgreSQL/SQLite**: Uses double quotes `"table_name"`
+
+This allows safe use of reserved keywords:
+
+```php
+// Safe to use reserved keywords
+DB::table('order')->where('type', 'sale')->get();
+// MySQL: SELECT * FROM `order` WHERE `type` = ?
+// PostgreSQL: SELECT * FROM "order" WHERE "type" = ?
+
+// Qualified identifiers are also escaped
+DB::table('users')
+    ->select(['users.id', 'users.name', 'orders.total'])
+    ->get();
+// MySQL: SELECT `users`.`id`, `users`.`name`, `orders`.`total` FROM `users`
+```
+
+> **Note**: Identifier escaping is automatic and transparent. You don't need to manually escape table or column names.
 
 ---
 

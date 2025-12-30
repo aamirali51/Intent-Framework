@@ -50,7 +50,13 @@ final class DB
             $user = Config::get('db.user', 'root');
             $pass = Config::get('db.pass', '');
 
-            $dsn = "{$driver}:host={$host};port={$port};dbname={$name};charset=utf8mb4";
+            // Build driver-specific DSN
+            $dsn = match($driver) {
+                'sqlite' => "sqlite:{$name}",
+                'pgsql' => "pgsql:host={$host};port={$port};dbname={$name}",
+                'mysql' => "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4",
+                default => "{$driver}:host={$host};port={$port};dbname={$name}"
+            };
 
             self::$pdo = new \PDO($dsn, $user, $pass, [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
@@ -85,7 +91,8 @@ final class DB
      */
     public function select(string|array $columns = ['*']): self
     {
-        $this->selectColumns = is_array($columns) ? $columns : func_get_args();
+        $cols = is_array($columns) ? $columns : func_get_args();
+        $this->selectColumns = array_map([$this, 'escapeIdentifier'], $cols);
         return $this;
     }
 
@@ -103,7 +110,11 @@ final class DB
             $operator = $operatorOrValue;
         }
 
-        $this->wheres[] = "{$column} {$operator} ?";
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->wheres[] = [
+            'sql' => "{$escapedColumn} {$operator} ?",
+            'chain' => 'AND'
+        ];
         $this->bindings[] = $value;
         return $this;
     }
@@ -114,7 +125,11 @@ final class DB
     public function whereIn(string $column, array $values): self
     {
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
-        $this->wheres[] = "{$column} IN ({$placeholders})";
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->wheres[] = [
+            'sql' => "{$escapedColumn} IN ({$placeholders})",
+            'chain' => 'AND'
+        ];
         $this->bindings = array_merge($this->bindings, $values);
         return $this;
     }
@@ -124,7 +139,11 @@ final class DB
      */
     public function whereNull(string $column): self
     {
-        $this->wheres[] = "{$column} IS NULL";
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->wheres[] = [
+            'sql' => "{$escapedColumn} IS NULL",
+            'chain' => 'AND'
+        ];
         return $this;
     }
 
@@ -133,7 +152,73 @@ final class DB
      */
     public function whereNotNull(string $column): self
     {
-        $this->wheres[] = "{$column} IS NOT NULL";
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->wheres[] = [
+            'sql' => "{$escapedColumn} IS NOT NULL",
+            'chain' => 'AND'
+        ];
+        return $this;
+    }
+
+    /**
+     * Add an OR WHERE clause.
+     */
+    public function orWhere(string $column, mixed $operatorOrValue, mixed $value = null): self
+    {
+        if ($value === null) {
+            $operator = '=';
+            $value = $operatorOrValue;
+        } else {
+            $operator = $operatorOrValue;
+        }
+
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->wheres[] = [
+            'sql' => "{$escapedColumn} {$operator} ?",
+            'chain' => 'OR'
+        ];
+        $this->bindings[] = $value;
+        return $this;
+    }
+
+    /**
+     * Add an OR WHERE IN clause.
+     */
+    public function orWhereIn(string $column, array $values): self
+    {
+        $placeholders = implode(', ', array_fill(0, count($values), '?'));
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->wheres[] = [
+            'sql' => "{$escapedColumn} IN ({$placeholders})",
+            'chain' => 'OR'
+        ];
+        $this->bindings = array_merge($this->bindings, $values);
+        return $this;
+    }
+
+    /**
+     * Add an OR WHERE NULL clause.
+     */
+    public function orWhereNull(string $column): self
+    {
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->wheres[] = [
+            'sql' => "{$escapedColumn} IS NULL",
+            'chain' => 'OR'
+        ];
+        return $this;
+    }
+
+    /**
+     * Add an OR WHERE NOT NULL clause.
+     */
+    public function orWhereNotNull(string $column): self
+    {
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->wheres[] = [
+            'sql' => "{$escapedColumn} IS NOT NULL",
+            'chain' => 'OR'
+        ];
         return $this;
     }
 
@@ -143,7 +228,8 @@ final class DB
     public function orderBy(string $column, string $direction = 'ASC'): self
     {
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
-        $this->orderBy[] = "{$column} {$direction}";
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->orderBy[] = "{$escapedColumn} {$direction}";
         return $this;
     }
 
@@ -199,10 +285,11 @@ final class DB
      */
     public function count(): int
     {
-        $sql = "SELECT COUNT(*) as count FROM {$this->table}";
+        $escapedTable = $this->escapeIdentifier($this->table);
+        $sql = "SELECT COUNT(*) as count FROM {$escapedTable}";
         
         if (!empty($this->wheres)) {
-            $sql .= ' WHERE ' . implode(' AND ', $this->wheres);
+            $sql .= ' WHERE ' . $this->buildWhereClause();
         }
 
         $stmt = self::connection()->prepare($sql);
@@ -226,14 +313,24 @@ final class DB
      */
     public function insert(array $data): int|string
     {
-        $columns = implode(', ', array_keys($data));
+        $columns = array_keys($data);
+        $escapedColumns = array_map([$this, 'escapeIdentifier'], $columns);
+        $columnsList = implode(', ', $escapedColumns);
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
-        $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})";
+        $escapedTable = $this->escapeIdentifier($this->table);
+        $sql = "INSERT INTO {$escapedTable} ({$columnsList}) VALUES ({$placeholders})";
         
         $stmt = self::connection()->prepare($sql);
-        $stmt->execute(array_values($data));
-
+        
+        // Bind values with proper types
+        $position = 1;
+        foreach ($data as $value) {
+            [$castValue, $type] = $this->castValue($value);
+            $stmt->bindValue($position++, $castValue, $type);
+        }
+        
+        $stmt->execute();
         return self::connection()->lastInsertId();
     }
 
@@ -247,22 +344,27 @@ final class DB
         }
 
         $columns = array_keys($rows[0]);
-        $columnsList = implode(', ', $columns);
+        $escapedColumns = array_map([$this, 'escapeIdentifier'], $columns);
+        $columnsList = implode(', ', $escapedColumns);
         $placeholders = '(' . implode(', ', array_fill(0, count($columns), '?')) . ')';
         $allPlaceholders = implode(', ', array_fill(0, count($rows), $placeholders));
 
-        $sql = "INSERT INTO {$this->table} ({$columnsList}) VALUES {$allPlaceholders}";
+        $escapedTable = $this->escapeIdentifier($this->table);
+        $sql = "INSERT INTO {$escapedTable} ({$columnsList}) VALUES {$allPlaceholders}";
 
-        $values = [];
+        $stmt = self::connection()->prepare($sql);
+        
+        // Bind all values with proper types
+        $position = 1;
         foreach ($rows as $row) {
             foreach ($columns as $col) {
-                $values[] = $row[$col] ?? null;
+                $value = $row[$col] ?? null;
+                [$castValue, $type] = $this->castValue($value);
+                $stmt->bindValue($position++, $castValue, $type);
             }
         }
 
-        $stmt = self::connection()->prepare($sql);
-        $stmt->execute($values);
-
+        $stmt->execute();
         return $stmt->rowCount();
     }
 
@@ -274,22 +376,35 @@ final class DB
     public function update(array $data): int
     {
         $sets = [];
-        $values = [];
 
         foreach ($data as $column => $value) {
-            $sets[] = "{$column} = ?";
-            $values[] = $value;
+            $escapedColumn = $this->escapeIdentifier($column);
+            $sets[] = "{$escapedColumn} = ?";
         }
 
-        $sql = "UPDATE {$this->table} SET " . implode(', ', $sets);
+        $escapedTable = $this->escapeIdentifier($this->table);
+        $sql = "UPDATE {$escapedTable} SET " . implode(', ', $sets);
 
         if (!empty($this->wheres)) {
-            $sql .= ' WHERE ' . implode(' AND ', $this->wheres);
+            $sql .= ' WHERE ' . $this->buildWhereClause();
         }
 
         $stmt = self::connection()->prepare($sql);
-        $stmt->execute(array_merge($values, $this->bindings));
-
+        
+        // Bind SET values with proper types
+        $position = 1;
+        foreach ($data as $value) {
+            [$castValue, $type] = $this->castValue($value);
+            $stmt->bindValue($position++, $castValue, $type);
+        }
+        
+        // Bind WHERE values
+        foreach ($this->bindings as $value) {
+            [$castValue, $type] = $this->castValue($value);
+            $stmt->bindValue($position++, $castValue, $type);
+        }
+        
+        $stmt->execute();
         return $stmt->rowCount();
     }
 
@@ -300,10 +415,11 @@ final class DB
      */
     public function delete(): int
     {
-        $sql = "DELETE FROM {$this->table}";
+        $escapedTable = $this->escapeIdentifier($this->table);
+        $sql = "DELETE FROM {$escapedTable}";
 
         if (!empty($this->wheres)) {
-            $sql .= ' WHERE ' . implode(' AND ', $this->wheres);
+            $sql .= ' WHERE ' . $this->buildWhereClause();
         }
 
         $stmt = self::connection()->prepare($sql);
@@ -318,10 +434,11 @@ final class DB
     private function buildSelectQuery(): string
     {
         $columns = implode(', ', $this->selectColumns);
-        $sql = "SELECT {$columns} FROM {$this->table}";
+        $escapedTable = $this->escapeIdentifier($this->table);
+        $sql = "SELECT {$columns} FROM {$escapedTable}";
 
         if (!empty($this->wheres)) {
-            $sql .= ' WHERE ' . implode(' AND ', $this->wheres);
+            $sql .= ' WHERE ' . $this->buildWhereClause();
         }
 
         if (!empty($this->orderBy)) {
@@ -337,5 +454,83 @@ final class DB
         }
 
         return $sql;
+    }
+
+    /**
+     * Build WHERE clause handling AND/OR chains.
+     */
+    private function buildWhereClause(): string
+    {
+        $whereClauses = [];
+        foreach ($this->wheres as $index => $where) {
+            if ($index === 0) {
+                $whereClauses[] = $where['sql'];
+            } else {
+                $whereClauses[] = $where['chain'] . ' ' . $where['sql'];
+            }
+        }
+        return implode(' ', $whereClauses);
+    }
+
+    /**
+     * Escape identifier (table/column name) based on database driver.
+     * 
+     * MySQL uses backticks, PostgreSQL/SQLite use double quotes.
+     */
+    private function escapeIdentifier(string $identifier): string
+    {
+        // Handle qualified identifiers (table.column)
+        if (str_contains($identifier, '.')) {
+            $parts = explode('.', $identifier);
+            return implode('.', array_map([$this, 'escapeIdentifier'], $parts));
+        }
+
+        // Don't escape wildcards or already escaped identifiers
+        if ($identifier === '*' || str_starts_with($identifier, '`') || str_starts_with($identifier, '"')) {
+            return $identifier;
+        }
+
+        $driver = self::connection()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        
+        return match($driver) {
+            'mysql' => "`{$identifier}`",
+            'pgsql', 'sqlite', 'sqlsrv' => "\"{$identifier}\"",
+            default => "\"{$identifier}\""
+        };
+    }
+
+    /**
+     * Cast value to appropriate PDO type.
+     * 
+     * @return array [value, PDO::PARAM_*]
+     */
+    private function castValue(mixed $value): array
+    {
+        return match(true) {
+            $value instanceof \DateTimeInterface => [
+                $value->format('Y-m-d H:i:s'),
+                \PDO::PARAM_STR
+            ],
+            is_bool($value) => [
+                $value ? 1 : 0,
+                \PDO::PARAM_INT
+            ],
+            is_null($value) => [
+                null,
+                \PDO::PARAM_NULL
+            ],
+            is_int($value) => [
+                $value,
+                \PDO::PARAM_INT
+            ],
+            is_float($value) => [
+                $value,
+                \PDO::PARAM_STR  // PDO doesn't have PARAM_FLOAT
+            ],
+            default => [
+                (string)$value,
+                \PDO::PARAM_STR
+            ]
+        };
     }
 }
