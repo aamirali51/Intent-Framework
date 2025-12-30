@@ -276,9 +276,32 @@ Route::middleware(AuthMiddleware::class, function() {
 
 ## DB (Database)
 
-**Class:** `Core\DB`
+**Classes:** `Core\DB` (facade), `Core\QueryBuilder` (query building)
 
-Query builder (NOT an ORM). Returns arrays, not objects.
+Database layer with separated concerns: `DB` manages connections, `QueryBuilder` builds and executes queries.
+
+### Architecture
+
+The database layer consists of two classes:
+
+- **DB**: Connection manager and static facade
+- **QueryBuilder**: Query building and execution
+
+```php
+// DB creates QueryBuilder instances
+$query = DB::table('users');  // Returns QueryBuilder instance
+$users = $query->where('active', 1)->get();
+
+// Fluent chaining (most common usage)
+$users = DB::table('users')->where('active', 1)->get();
+```
+
+**Benefits of Separation:**
+- Single Responsibility Principle
+- Better testability
+- Cleaner code organization
+- Industry standard pattern
+- More extensible
 
 ### Static Methods
 

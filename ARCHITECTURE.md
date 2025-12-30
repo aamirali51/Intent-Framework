@@ -33,7 +33,8 @@ INTENT/
 │   │   ├── Auth.php       # Authentication
 │   │   ├── Cache.php      # File-based caching
 │   │   ├── Config.php     # Configuration
-│   │   ├── DB.php         # Query builder
+│   │   ├── DB.php         # Connection manager + facade
+│   │   ├── QueryBuilder.php # Query building + execution
 │   │   ├── Event.php      # Event dispatcher
 │   │   ├── Log.php        # Logging
 │   │   ├── Middleware.php # Middleware interface
@@ -151,7 +152,28 @@ cache()->flush();              // Clear all
 ```
 
 ### 3.10 DB (Query Builder)
+
+**Architecture: Separated Concerns**
+
+```
+DB (static facade + connection manager)
+  └─> QueryBuilder (query building + execution)
+```
+
+**DB Class (`Core\DB`):**
+- PDO connection management
+- Static facade for `table()` method
+- Raw SQL execution
+- Driver name access
+
+**QueryBuilder Class (`Core\QueryBuilder`):**
+- Query construction (SELECT, WHERE, JOIN, etc.)
+- Query execution (get, first, insert, update, delete)
+- Type casting and identifier escaping
+- Result retrieval
+
 ```php
+// Basic queries
 DB::table('users')->get();
 DB::table('users')->where('id', 1)->first();
 DB::table('users')->insert(['name' => 'John']);
@@ -175,30 +197,33 @@ DB::table('posts')->insert([
 // MySQL, PostgreSQL, SQLite with automatic identifier escaping
 ```
 
-#### Database Layer Design Decisions
+#### Why Separate DB and QueryBuilder?
 
-**Combined DB + QueryBuilder Class**
+**Previous Architecture (v0.4.0):**
+```
+DB (combined: connection + query building + execution)
+```
 
-The `Core\DB` class combines connection management, query building, and execution in a single class.
+**Current Architecture (v0.5.0+):**
+```
+DB (connection manager + facade)
+  └─> QueryBuilder (query building + execution)
+```
 
-**Rationale:**
-- **Simplicity**: Fewer classes to understand for developers
-- **Micro-framework philosophy**: Prioritize ease of use over separation of concerns
-- **Reduced boilerplate**: Direct API without factory patterns
+**Benefits:**
+- ✅ **Single Responsibility**: Each class has one clear purpose
+- ✅ **Better Testability**: Can test QueryBuilder in isolation
+- ✅ **More Extensible**: Easy to add custom query builders
+- ✅ **Industry Standard**: Follows Laravel, Doctrine, Eloquent patterns
+- ✅ **Cleaner Code**: Smaller, more focused classes
+- ✅ **Backward Compatible**: API remains identical
 
 **Trade-offs:**
-- Less testable in isolation
-- Harder to extend with custom query builders
-- Violates single responsibility principle
+- Slightly more complex (2 classes instead of 1)
+- Minimal (QueryBuilder uses `DB::connection()` internally)
 
-**Industry Pattern**: Most frameworks separate these concerns:
-```
-DB/Connection (manages PDO)
-  └─> QueryBuilder (builds queries)
-      └─> Grammar (database-specific SQL)
-```
-
-**Our Approach**: Acceptable for v1.x given micro-framework goals. May revisit in v2.0 if complexity grows.
+**Decision Rationale:**
+After community feedback, we adopted the industry standard pattern. The separation provides significant benefits with minimal complexity cost. The static facade pattern keeps the API simple while maintaining proper separation of concerns.
 
 **Identifier Escaping Strategy**
 
@@ -422,7 +447,8 @@ vendor\bin\phpunit         # Direct run
 | src/Core/Auth.php | Authentication |
 | src/Core/Cache.php | File caching |
 | src/Core/Config.php | Configuration |
-| src/Core/DB.php | Query builder |
+| src/Core/DB.php | Connection manager + facade |
+| src/Core/QueryBuilder.php | Query building + execution |
 | src/Core/Event.php | Event dispatcher |
 | src/Core/Middleware.php | Interface |
 | src/Core/Pipeline.php | Middleware runner |
@@ -439,7 +465,7 @@ vendor\bin\phpunit         # Direct run
 | src/Core/Upload.php | File upload handling |
 | src/Core/Paginator.php | Pagination helper |
 
-**Total: ~4000 lines of core code**
+**Total: ~4500 lines of core code**
 
 ---
 
