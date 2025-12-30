@@ -44,6 +44,15 @@ final class DB
                 \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
                 \PDO::ATTR_EMULATE_PREPARES => false,
             ]);
+
+            // Apply SQLite performance optimizations (PRAGMAs)
+            if ($driver === 'sqlite') {
+                self::$pdo->exec('PRAGMA journal_mode = WAL');      // Write-Ahead Logging for better concurrency
+                self::$pdo->exec('PRAGMA foreign_keys = ON');       // Enable foreign key constraints
+                self::$pdo->exec('PRAGMA synchronous = NORMAL');    // Balance between safety and speed
+                self::$pdo->exec('PRAGMA cache_size = -64000');     // 64MB cache
+                self::$pdo->exec('PRAGMA temp_store = MEMORY');     // Store temp tables in memory
+            }
         }
 
         return self::$pdo;
