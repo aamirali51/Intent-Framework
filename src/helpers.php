@@ -32,9 +32,55 @@ if (!function_exists('env')) {
 if (!function_exists('view')) {
     /**
      * Render a view template.
+     * 
+     * Auto-detects Twig if installed, falls back to plain PHP.
+     * 
+     * Usage:
+     *   view('welcome', ['name' => 'John'])
+     * 
+     * With Twig installed:
+     *   - Looks for resources/views/welcome.twig
+     *   - Falls back to resources/views/welcome.php
+     * 
+     * Without Twig:
+     *   - Uses resources/views/welcome.php
      */
     function view(string $name, array $data = []): string
     {
+        // Check if Twig is installed
+        if (class_exists('Twig\Environment')) {
+            static $twig = null;
+            
+            if ($twig === null) {
+                $loader = new \Twig\Loader\FilesystemLoader(BASE_PATH . '/resources/views');
+                $twig = new \Twig\Environment($loader, [
+                    'cache' => BASE_PATH . '/storage/cache/twig',
+                    'auto_reload' => config('app.debug', false),
+                    'autoescape' => 'html',
+                    'strict_variables' => config('app.debug', false),
+                ]);
+                
+                // Add Intent globals
+                $twig->addGlobal('auth', auth());
+                $twig->addGlobal('user', user());
+                $twig->addGlobal('csrf_token', csrf_token());
+                
+                // Add Intent functions
+                $twig->addFunction(new \Twig\TwigFunction('config', fn($key, $default = null) => config($key, $default)));
+                $twig->addFunction(new \Twig\TwigFunction('session', fn($key, $default = null) => session($key, $default)));
+                $twig->addFunction(new \Twig\TwigFunction('flash', fn($key) => flash($key)));
+                $twig->addFunction(new \Twig\TwigFunction('csrf_field', fn() => csrf_field(), ['is_safe' => ['html']]));
+                $twig->addFunction(new \Twig\TwigFunction('old', fn($key, $default = '') => session("_old.{$key}") ?? $default));
+            }
+            
+            // Try .twig extension first
+            $twigTemplate = $name . '.twig';
+            if ($twig->getLoader()->exists($twigTemplate)) {
+                return $twig->render($twigTemplate, $data);
+            }
+        }
+        
+        // Fallback to plain PHP
         $path = BASE_PATH . '/resources/views/' . $name . '.php';
         
         if (!file_exists($path)) {

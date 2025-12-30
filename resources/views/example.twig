@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>Welcome to Intent Framework with Twig!</h1>
+    
+    {% if user %}
+        <p>Hello, {{ user.name }}!</p>
+    {% else %}
+        <p>Hello, Guest!</p>
+    {% endif %}
+    
+    <p>This template is rendered with Twig.</p>
+    
+    {# Flash messages #}
+    {% if flash('success') %}
+        <div class="alert alert-success">
+            {{ flash('success') }}
+        </div>
+    {% endif %}
+    
+    {# CSRF protection #}
+    <form method="POST" action="/example">
+        {{ csrf_field() }}
+        <input type="text" name="name" value="{{ old('name') }}">
+        <button type="submit">Submit</button>
+    </form>
+    
+    <footer>
+        <p>App Name: {{ config('app.name') }}</p>
+        <p>CSRF Token: {{ csrf_token }}</p>
+    </footer>
+</body>
+</html>
