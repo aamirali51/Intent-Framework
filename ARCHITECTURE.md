@@ -228,10 +228,39 @@ After community feedback, we adopted the industry standard pattern. The separati
 **Identifier Escaping Strategy**
 
 Automatic escaping of all identifiers based on detected database driver:
-- **MySQL**: Backticks `` `table_name` ``
-- **PostgreSQL/SQLite**: Double quotes `"table_name"`
+- **MySQL**: Backticks `` `table_name` `` (internal `` ` `` doubled)
+- **PostgreSQL/SQLite**: Double quotes `"table_name"` (internal `"` doubled)
+- **Backslashes**: Escaped in all drivers
 
-Benefits: Prevents SQL errors with reserved keywords, improves cross-database compatibility, transparent to developers.
+**Security**: Uses `strtr()` to prevent SQL injection via malicious identifier names.
+
+```php
+// Attack attempt (blocked):
+DB::table('users`; DROP TABLE users; --')->get();
+// Escaped to: `users``; DROP TABLE users; --`
+```
+
+**Operator Whitelist**
+
+All SQL operators are validated against a strict whitelist to prevent injection:
+
+```php
+const ALLOWED_OPERATORS = [
+    '=', '!=', '<>', '<', '>', '<=', '>=',
+    'LIKE', 'NOT LIKE', 'ILIKE',
+    'REGEXP', 'NOT REGEXP', 'RLIKE',
+    'IS', 'IS NOT', 'IN', 'NOT IN',
+    'BETWEEN', 'NOT BETWEEN',
+];
+```
+
+Invalid operators throw `InvalidArgumentException`:
+
+```php
+// Attack attempt (blocked):
+->where('id', '1; DROP TABLE users;--', 'x')
+// Throws: InvalidArgumentException: Invalid SQL operator
+```
 
 **Type Casting Approach**
 
