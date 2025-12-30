@@ -78,4 +78,57 @@ final class DB
     {
         return self::connection()->getAttribute(\PDO::ATTR_DRIVER_NAME);
     }
+
+    /**
+     * Execute a callback within a database transaction.
+     * 
+     * Automatically commits on success, rolls back on exception.
+     * 
+     * Usage:
+     *   DB::transaction(function() {
+     *       DB::table('users')->insert(['name' => 'John']);
+     *       DB::table('orders')->insert(['user_id' => 1]);
+     *   });
+     * 
+     * @param callable $callback Function to execute within transaction
+     * @return mixed Return value from callback
+     * @throws \Throwable Re-throws any exception after rollback
+     */
+    public static function transaction(callable $callback): mixed
+    {
+        self::beginTransaction();
+        
+        try {
+            $result = $callback();
+            self::commit();
+            return $result;
+        } catch (\Throwable $e) {
+            self::rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * Begin a database transaction.
+     */
+    public static function beginTransaction(): bool
+    {
+        return self::connection()->beginTransaction();
+    }
+
+    /**
+     * Commit the current transaction.
+     */
+    public static function commit(): bool
+    {
+        return self::connection()->commit();
+    }
+
+    /**
+     * Rollback the current transaction.
+     */
+    public static function rollback(): bool
+    {
+        return self::connection()->rollBack();
+    }
 }
