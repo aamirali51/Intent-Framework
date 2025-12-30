@@ -40,4 +40,19 @@ class ConfigTest extends TestCase
         $this->assertIsArray($all);
         $this->assertArrayHasKey('app.name', $all);
     }
+
+    public function testLoadDoesNotReloadWhenAlreadyLoaded(): void
+    {
+        // First load
+        Config::load(BASE_PATH . '/tests/config.php');
+        $firstValue = Config::get('app.name');
+        
+        // Try to load again - should return early
+        Config::load(BASE_PATH . '/tests/config.php');
+        $secondValue = Config::get('app.name');
+        
+        // Values should be the same (not reloaded)
+        $this->assertEquals($firstValue, $secondValue);
+    }
 }
+

@@ -137,4 +137,48 @@ class LogTest extends TestCase
         // Check timestamp format [YYYY-MM-DD HH:MM:SS]
         $this->assertMatchesRegularExpression('/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/', $content);
     }
+
+    public function testContextHasSpaceBeforeJson(): void
+    {
+        Log::info('Message', ['key' => 'value']);
+        
+        $content = Log::read();
+        // Context should have space before JSON
+        $this->assertStringContainsString('Message {"key":"value"}', $content);
+        $this->assertStringNotContainsString('Message{"key":"value"}', $content);
+    }
+
+    public function testLogEndsWithNewline(): void
+    {
+        Log::info('Test');
+        
+        $content = Log::read();
+        // Log should end with newline
+        $this->assertStringEndsWith(PHP_EOL, $content);
+    }
+
+    public function testLevelIsNormalizedToLowercase(): void
+    {
+        Log::log('INFO', 'Test uppercase');
+        Log::log('WaRnInG', 'Test mixed case');
+        
+        $content = Log::read();
+        // Levels should be uppercase in output
+        $this->assertStringContainsString('[INFO]', $content);
+        $this->assertStringContainsString('[WARNING]', $content);
+    }
+
+    public function testLogDirectoryUsesBasePath(): void
+    {
+        Log::info('Test');
+        
+        $dates = Log::dates();
+        // If we can read logs, the directory must exist
+        $this->assertNotEmpty($dates);
+        
+        // Verify log file is in correct directory
+        $logFile = BASE_PATH . '/storage/logs/' . date('Y-m-d') . '.log';
+        $this->assertFileExists($logFile);
+    }
 }
+

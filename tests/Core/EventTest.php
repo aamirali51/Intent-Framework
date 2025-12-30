@@ -72,4 +72,30 @@ class EventTest extends TestCase
         $result = Event::until('test');
         $this->assertEquals('stopped', $result);
     }
+
+    public function testHasListenersReturnsFalseWhenEmpty(): void
+    {
+        // Test that hasListeners uses AND not OR
+        $this->assertFalse(Event::hasListeners('nonexistent'));
+    }
+
+    public function testHasListenersReturnsTrueWhenSet(): void
+    {
+        Event::listen('test', fn() => 'value');
+        // Both isset and !empty must be true
+        $this->assertTrue(Event::hasListeners('test'));
+    }
+
+    public function testDispatchReturnsAllResults(): void
+    {
+        Event::listen('test', fn() => 'first');
+        Event::listen('test', fn() => 'second');
+        Event::listen('test', fn() => 'third');
+
+        $results = Event::dispatch('test');
+        // Should return all results, not just first one
+        $this->assertCount(3, $results);
+        $this->assertEquals(['first', 'second', 'third'], $results);
+    }
 }
+
