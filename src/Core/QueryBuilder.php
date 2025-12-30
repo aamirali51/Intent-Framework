@@ -26,6 +26,21 @@ final class QueryBuilder
     private array $selectColumns = ['*'];
 
     /**
+     * Allowed SQL operators (whitelist for security).
+     * 
+     * Any operator not in this list will throw an exception.
+     */
+    private const ALLOWED_OPERATORS = [
+        '=', '!=', '<>', '<', '>', '<=', '>=',
+        'LIKE', 'NOT LIKE', 'ILIKE',  // ILIKE for PostgreSQL
+        'REGEXP', 'NOT REGEXP', 'RLIKE',  // MySQL regex
+        '~', '~*', '!~', '!~*',  // PostgreSQL regex
+        'IS', 'IS NOT',
+        'IN', 'NOT IN',
+        'BETWEEN', 'NOT BETWEEN',
+    ];
+
+    /**
      * Create a new query builder instance.
      * 
      * @internal Called by DB::table(), not for direct use
@@ -47,6 +62,8 @@ final class QueryBuilder
 
     /**
      * Add a where clause.
+     * 
+     * @throws \InvalidArgumentException If operator is not allowed
      */
     public function where(string $column, mixed $operatorOrValue, mixed $value = null): self
     {
@@ -56,7 +73,7 @@ final class QueryBuilder
             $value = $operatorOrValue;
         } else {
             // Three arguments: where('age', '>', 18)
-            $operator = $operatorOrValue;
+            $operator = $this->validateOperator($operatorOrValue);
         }
 
         $escapedColumn = $this->escapeIdentifier($column);
@@ -111,6 +128,8 @@ final class QueryBuilder
 
     /**
      * Add an OR WHERE clause.
+     * 
+     * @throws \InvalidArgumentException If operator is not allowed
      */
     public function orWhere(string $column, mixed $operatorOrValue, mixed $value = null): self
     {
@@ -118,7 +137,7 @@ final class QueryBuilder
             $operator = '=';
             $value = $operatorOrValue;
         } else {
-            $operator = $operatorOrValue;
+            $operator = $this->validateOperator($operatorOrValue);
         }
 
         $escapedColumn = $this->escapeIdentifier($column);
@@ -453,6 +472,25 @@ final class QueryBuilder
             'pgsql', 'sqlite', 'sqlsrv' => '"' . strtr($identifier, ['"' => '""', '\\' => '\\\\']) . '"',
             default => '"' . strtr($identifier, ['"' => '""', '\\' => '\\\\']) . '"'
         };
+    }
+
+    /**
+     * Validate operator against whitelist to prevent SQL injection.
+     * 
+     * @throws \InvalidArgumentException If operator is not in whitelist
+     */
+    private function validateOperator(string $operator): string
+    {
+        $normalized = strtoupper(trim($operator));
+        
+        if (!in_array($normalized, self::ALLOWED_OPERATORS, true)) {
+            throw new \InvalidArgumentException(
+                "Invalid SQL operator: '{$operator}'. " .
+                "Allowed operators: " . implode(', ', self::ALLOWED_OPERATORS)
+            );
+        }
+        
+        return $operator;
     }
 
     /**
