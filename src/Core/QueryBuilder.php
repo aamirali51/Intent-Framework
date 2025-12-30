@@ -24,6 +24,9 @@ final class QueryBuilder
     private ?int $limitValue = null;
     private ?int $offsetValue = null;
     private array $selectColumns = ['*'];
+    private array $joins = [];
+    private array $groupBy = [];
+    private array $having = [];
 
     /**
      * Allowed SQL operators (whitelist for security).
@@ -198,6 +201,77 @@ final class QueryBuilder
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
         $escapedColumn = $this->escapeIdentifier($column);
         $this->orderBy[] = "{$escapedColumn} {$direction}";
+        return $this;
+    }
+
+    /**
+     * Add an INNER JOIN clause.
+     * 
+     * Usage:
+     *   ->join('orders', 'users.id', '=', 'orders.user_id')
+     */
+    public function join(string $table, string $first, string $operator, string $second): self
+    {
+        return $this->addJoin('INNER', $table, $first, $operator, $second);
+    }
+
+    /**
+     * Add a LEFT JOIN clause.
+     */
+    public function leftJoin(string $table, string $first, string $operator, string $second): self
+    {
+        return $this->addJoin('LEFT', $table, $first, $operator, $second);
+    }
+
+    /**
+     * Add a RIGHT JOIN clause.
+     */
+    public function rightJoin(string $table, string $first, string $operator, string $second): self
+    {
+        return $this->addJoin('RIGHT', $table, $first, $operator, $second);
+    }
+
+    /**
+     * Internal method to add a JOIN clause.
+     */
+    private function addJoin(string $type, string $table, string $first, string $operator, string $second): self
+    {
+        $operator = $this->validateOperator($operator);
+        $escapedTable = $this->escapeIdentifier($table);
+        $escapedFirst = $this->escapeIdentifier($first);
+        $escapedSecond = $this->escapeIdentifier($second);
+        
+        $this->joins[] = "{$type} JOIN {$escapedTable} ON {$escapedFirst} {$operator} {$escapedSecond}";
+        return $this;
+    }
+
+    /**
+     * Add a GROUP BY clause.
+     * 
+     * Usage:
+     *   ->groupBy('category')
+     *   ->groupBy('category', 'status')
+     */
+    public function groupBy(string ...$columns): self
+    {
+        foreach ($columns as $column) {
+            $this->groupBy[] = $this->escapeIdentifier($column);
+        }
+        return $this;
+    }
+
+    /**
+     * Add a HAVING clause (for use with GROUP BY).
+     * 
+     * Usage:
+     *   ->groupBy('category')->having('COUNT(*)', '>', 5)
+     */
+    public function having(string $column, string $operator, mixed $value): self
+    {
+        $operator = $this->validateOperator($operator);
+        $escapedColumn = $this->escapeIdentifier($column);
+        $this->having[] = "{$escapedColumn} {$operator} ?";
+        $this->bindings[] = $value;
         return $this;
     }
 
@@ -405,18 +479,37 @@ final class QueryBuilder
         $escapedTable = $this->escapeIdentifier($this->table);
         $sql = "SELECT {$columns} FROM {$escapedTable}";
 
+        // Add JOINs
+        if (!empty($this->joins)) {
+            $sql .= ' ' . implode(' ', $this->joins);
+        }
+
+        // Add WHERE
         if (!empty($this->wheres)) {
             $sql .= ' WHERE ' . $this->buildWhereClause();
         }
 
+        // Add GROUP BY
+        if (!empty($this->groupBy)) {
+            $sql .= ' GROUP BY ' . implode(', ', $this->groupBy);
+        }
+
+        // Add HAVING
+        if (!empty($this->having)) {
+            $sql .= ' HAVING ' . implode(' AND ', $this->having);
+        }
+
+        // Add ORDER BY
         if (!empty($this->orderBy)) {
             $sql .= ' ORDER BY ' . implode(', ', $this->orderBy);
         }
 
+        // Add LIMIT
         if ($this->limitValue !== null) {
             $sql .= " LIMIT {$this->limitValue}";
         }
 
+        // Add OFFSET
         if ($this->offsetValue !== null) {
             $sql .= " OFFSET {$this->offsetValue}";
         }
