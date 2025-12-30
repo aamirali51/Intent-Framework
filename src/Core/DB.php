@@ -99,6 +99,14 @@ final class DB
      *       DB::table('orders')->insert(['user_id' => 1]);
      *   });
      * 
+     * Nested transactions use SAVEPOINTs:
+     *   DB::transaction(function() {
+     *       DB::table('users')->insert(['name' => 'John']);
+     *       DB::transaction(function() {  // Uses SAVEPOINT
+     *           DB::table('orders')->insert(['user_id' => 1]);
+     *       });
+     *   });
+     * 
      * @param callable $callback Function to execute within transaction
      * @return mixed Return value from callback
      * @throws \Throwable Re-throws any exception after rollback
@@ -118,26 +126,78 @@ final class DB
     }
 
     /**
-     * Begin a database transaction.
+     * Current transaction depth (0 = no transaction).
+     */
+    private static int $transactionDepth = 0;
+
+    /**
+     * Begin a database transaction or savepoint.
+     * 
+     * First call starts a transaction, subsequent calls create savepoints.
      */
     public static function beginTransaction(): bool
     {
-        return self::connection()->beginTransaction();
+        if (self::$transactionDepth === 0) {
+            $result = self::connection()->beginTransaction();
+        } else {
+            $savepointName = 'savepoint_' . self::$transactionDepth;
+            self::connection()->exec("SAVEPOINT {$savepointName}");
+            $result = true;
+        }
+        
+        self::$transactionDepth++;
+        return $result;
     }
 
     /**
-     * Commit the current transaction.
+     * Commit the current transaction or release savepoint.
      */
     public static function commit(): bool
     {
-        return self::connection()->commit();
+        if (self::$transactionDepth === 0) {
+            return false;
+        }
+        
+        self::$transactionDepth--;
+        
+        if (self::$transactionDepth === 0) {
+            return self::connection()->commit();
+        } else {
+            $savepointName = 'savepoint_' . self::$transactionDepth;
+            self::connection()->exec("RELEASE SAVEPOINT {$savepointName}");
+            return true;
+        }
     }
 
     /**
-     * Rollback the current transaction.
+     * Rollback the current transaction or to savepoint.
      */
     public static function rollback(): bool
     {
-        return self::connection()->rollBack();
+        if (self::$transactionDepth === 0) {
+            return false;
+        }
+        
+        self::$transactionDepth--;
+        
+        if (self::$transactionDepth === 0) {
+            return self::connection()->rollBack();
+        } else {
+            $savepointName = 'savepoint_' . self::$transactionDepth;
+            self::connection()->exec("ROLLBACK TO SAVEPOINT {$savepointName}");
+            return true;
+        }
+    }
+
+    /**
+     * Get current transaction depth.
+     * 
+     * 0 = no active transaction
+     * 1 = main transaction
+     * 2+ = nested transaction (using savepoints)
+     */
+    public static function transactionDepth(): int
+    {
+        return self::$transactionDepth;
     }
 }
