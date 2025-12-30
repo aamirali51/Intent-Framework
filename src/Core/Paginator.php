@@ -56,7 +56,7 @@ final class Paginator
      * Create paginator for DB query (auto-paginate).
      */
     public static function fromQuery(
-        DB $query,
+        QueryBuilder $query,
         int $perPage = 15,
         ?int $currentPage = null
     ): self {
