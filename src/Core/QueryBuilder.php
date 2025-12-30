@@ -411,6 +411,101 @@ final class QueryBuilder
     }
 
     /**
+     * Insert a row, ignoring if it already exists.
+     * 
+     * Usage:
+     *   DB::table('users')->insertOrIgnore(['email' => 'test@example.com', 'name' => 'John']);
+     * 
+     * @return int|string|false Last insert ID, or false if ignored
+     */
+    public function insertOrIgnore(array $data): int|string|false
+    {
+        $columns = array_keys($data);
+        $escapedColumns = array_map([$this, 'escapeIdentifier'], $columns);
+        $columnsList = implode(', ', $escapedColumns);
+        $placeholders = implode(', ', array_fill(0, count($data), '?'));
+        $escapedTable = $this->escapeIdentifier($this->table);
+
+        $driver = DB::getDriverName();
+        
+        $sql = match($driver) {
+            'mysql' => "INSERT IGNORE INTO {$escapedTable} ({$columnsList}) VALUES ({$placeholders})",
+            'pgsql', 'sqlite' => "INSERT INTO {$escapedTable} ({$columnsList}) VALUES ({$placeholders}) ON CONFLICT DO NOTHING",
+            default => "INSERT INTO {$escapedTable} ({$columnsList}) VALUES ({$placeholders}) ON CONFLICT DO NOTHING"
+        };
+
+        $stmt = DB::connection()->prepare($sql);
+        
+        $position = 1;
+        foreach ($data as $value) {
+            [$castValue, $type] = $this->castValue($value);
+            $stmt->bindValue($position++, $castValue, $type);
+        }
+        
+        $stmt->execute();
+        
+        $lastId = DB::connection()->lastInsertId();
+        return $lastId ?: false;
+    }
+
+    /**
+     * Insert a row, or update if it already exists (UPSERT).
+     * 
+     * Usage:
+     *   DB::table('users')->insertOrUpdate(
+     *       ['email' => 'test@example.com', 'name' => 'John'],  // data to insert
+     *       ['name' => 'John Updated']  // columns to update on conflict
+     *   );
+     * 
+     * @param array $data Data to insert
+     * @param array $updateColumns Columns to update on conflict (key => value)
+     * @return int|string Last insert ID or number of affected rows
+     */
+    public function insertOrUpdate(array $data, array $updateColumns): int|string
+    {
+        $columns = array_keys($data);
+        $escapedColumns = array_map([$this, 'escapeIdentifier'], $columns);
+        $columnsList = implode(', ', $escapedColumns);
+        $placeholders = implode(', ', array_fill(0, count($data), '?'));
+        $escapedTable = $this->escapeIdentifier($this->table);
+
+        $driver = DB::getDriverName();
+        
+        // Build update clause
+        $updateSets = [];
+        foreach ($updateColumns as $column => $value) {
+            $escapedCol = $this->escapeIdentifier($column);
+            $updateSets[] = "{$escapedCol} = ?";
+        }
+        $updateClause = implode(', ', $updateSets);
+
+        $sql = match($driver) {
+            'mysql' => "INSERT INTO {$escapedTable} ({$columnsList}) VALUES ({$placeholders}) ON DUPLICATE KEY UPDATE {$updateClause}",
+            'pgsql', 'sqlite' => "INSERT INTO {$escapedTable} ({$columnsList}) VALUES ({$placeholders}) ON CONFLICT DO UPDATE SET {$updateClause}",
+            default => "INSERT INTO {$escapedTable} ({$columnsList}) VALUES ({$placeholders}) ON CONFLICT DO UPDATE SET {$updateClause}"
+        };
+
+        $stmt = DB::connection()->prepare($sql);
+        
+        // Bind insert values
+        $position = 1;
+        foreach ($data as $value) {
+            [$castValue, $type] = $this->castValue($value);
+            $stmt->bindValue($position++, $castValue, $type);
+        }
+        
+        // Bind update values
+        foreach ($updateColumns as $value) {
+            [$castValue, $type] = $this->castValue($value);
+            $stmt->bindValue($position++, $castValue, $type);
+        }
+        
+        $stmt->execute();
+        
+        return DB::connection()->lastInsertId() ?: $stmt->rowCount();
+    }
+
+    /**
      * Update matching rows.
      * 
      * @return int Number of affected rows
