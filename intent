@@ -51,6 +51,7 @@ $command = $argv[1] ?? 'help';
 $args = array_slice($argv, 2);
 
 match ($command) {
+    'install' => install(),
     'serve' => serve($args),
     'cache:clear' => cacheClear(),
     'make:handler' => makeHandler($args),
@@ -63,6 +64,58 @@ match ($command) {
 // ─────────────────────────────────────────────────────────────
 // Commands
 // ─────────────────────────────────────────────────────────────
+
+function install(): void {
+    title("Intent Framework Setup");
+    
+    echo PHP_EOL;
+    info("Welcome to Intent Framework!");
+    echo PHP_EOL;
+    
+    // Check if Twig is already installed
+    if (class_exists('Twig\Environment')) {
+        success("Twig is already installed");
+        return;
+    }
+    
+    // Ask about Twig
+    echo YELLOW . "Would you like to install Twig templating? (y/n): " . RESET;
+    $answer = trim(fgets(STDIN));
+    
+    if (strtolower($answer) === 'y' || strtolower($answer) === 'yes') {
+        echo PHP_EOL;
+        info("Installing Twig...");
+        
+        // Run composer require
+        passthru("composer require twig/twig", $exitCode);
+        
+        if ($exitCode === 0) {
+            echo PHP_EOL;
+            success("Twig installed successfully!");
+            
+            // Create cache directory
+            $cacheDir = BASE_PATH . '/storage/cache/twig';
+            if (!is_dir($cacheDir)) {
+                mkdir($cacheDir, 0755, true);
+                success("Created Twig cache directory");
+            }
+            
+            echo PHP_EOL;
+            info("You can now use .twig templates in resources/views/");
+            info("Example: resources/views/welcome.twig");
+        } else {
+            echo PHP_EOL;
+            error("Failed to install Twig");
+        }
+    } else {
+        echo PHP_EOL;
+        info("Skipping Twig installation");
+        info("You can install it later with: composer require twig/twig");
+    }
+    
+    echo PHP_EOL;
+    success("Setup complete! Run 'php intent serve' to start developing");
+}
 
 function serve(array $args): void {
     $port = $args[0] ?? '8080';
@@ -202,6 +255,7 @@ function help(): void {
     php intent <command> [options]
 
   COMMANDS:
+    install              Interactive setup (prompts for Twig)
     serve [port]         Start development server (default: 8080)
     cache:clear          Clear all cached data
     make:handler <name>  Create a new handler class
@@ -210,6 +264,7 @@ function help(): void {
     help                 Show this help message
 
   EXAMPLES:
+    php intent install
     php intent serve
     php intent serve 3000
     php intent cache:clear
