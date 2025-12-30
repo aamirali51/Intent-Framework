@@ -424,7 +424,14 @@ final class QueryBuilder
     /**
      * Escape identifier (table/column name) based on database driver.
      * 
-     * MySQL uses backticks, PostgreSQL/SQLite use double quotes.
+     * Properly escapes quotes within identifiers to prevent SQL injection.
+     * 
+     * MySQL: backtick (`) → doubled backtick (``)
+     * PostgreSQL/SQLite: double quote (") → doubled double quote ("")
+     * 
+     * Examples:
+     *   MySQL: `user` → `user`, `user`name` → `user``name`
+     *   Postgres: "user" → "user", "user"name" → "user""name"
      */
     private function escapeIdentifier(string $identifier): string
     {
@@ -442,9 +449,9 @@ final class QueryBuilder
         $driver = DB::getDriverName();
         
         return match($driver) {
-            'mysql' => "`{$identifier}`",
-            'pgsql', 'sqlite', 'sqlsrv' => "\"{$identifier}\"",
-            default => "\"{$identifier}\""
+            'mysql' => '`' . strtr($identifier, ['`' => '``', '\\' => '\\\\']) . '`',
+            'pgsql', 'sqlite', 'sqlsrv' => '"' . strtr($identifier, ['"' => '""', '\\' => '\\\\']) . '"',
+            default => '"' . strtr($identifier, ['"' => '""', '\\' => '\\\\']) . '"'
         };
     }
 
