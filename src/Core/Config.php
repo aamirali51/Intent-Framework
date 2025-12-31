@@ -62,4 +62,29 @@ final class Config
     {
         return self::$config;
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Testing Support
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Reset all static state (for testing or long-running processes).
+     */
+    public static function reset(): void
+    {
+        self::$config = [];
+        self::$loaded = false;
+    }
+
+    /**
+     * Set multiple config values at once (for testing).
+     * 
+     * Usage in tests:
+     *   Config::fake(['db.driver' => 'sqlite', 'app.debug' => true]);
+     */
+    public static function fake(array $config): void
+    {
+        self::$config = $config;
+        self::$loaded = true;
+    }
 }

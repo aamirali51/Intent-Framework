@@ -226,4 +226,33 @@ final class Auth
         
         return $user;
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Testing Support
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Reset all static state (for testing or long-running processes).
+     */
+    public static function reset(): void
+    {
+        self::$user = null;
+        self::$table = 'users';
+        self::$usernameField = 'email';
+        self::$passwordField = 'password';
+    }
+
+    /**
+     * Fake a logged-in user for testing.
+     * 
+     * Usage in tests:
+     *   Auth::fake(['id' => 1, 'name' => 'Test User', 'email' => 'test@example.com']);
+     *   $this->assertTrue(Auth::check());
+     */
+    public static function fake(array $user): void
+    {
+        self::$user = $user;
+        Session::set(self::SESSION_KEY, $user['id'] ?? null);
+        Session::set(self::SESSION_USER, $user);
+    }
 }

@@ -160,4 +160,24 @@ final class Cache
     {
         return self::increment($key, -$amount);
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Testing Support
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Reset all static state (for testing or long-running processes).
+     */
+    public static function reset(): void
+    {
+        self::$path = null;
+    }
+
+    /**
+     * Set a custom cache path (for testing).
+     */
+    public static function setPath(?string $path): void
+    {
+        self::$path = $path;
+    }
 }

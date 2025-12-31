@@ -252,4 +252,29 @@ final class Session
     {
         return self::increment($key, -$amount);
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Testing Support
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Reset all static state (for testing or long-running processes).
+     */
+    public static function reset(): void
+    {
+        self::$started = false;
+        $_SESSION = [];
+    }
+
+    /**
+     * Fake session data for testing (without starting real session).
+     * 
+     * Usage in tests:
+     *   Session::fake(['user_id' => 1, 'role' => 'admin']);
+     */
+    public static function fake(array $data = []): void
+    {
+        self::$started = true;
+        $_SESSION = $data;
+    }
 }

@@ -200,4 +200,51 @@ final class DB
     {
         return self::$transactionDepth;
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Testing Support
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Set a custom PDO connection (for testing).
+     * 
+     * Usage in tests:
+     *   $mockPdo = $this->createMock(PDO::class);
+     *   DB::setConnection($mockPdo);
+     */
+    public static function setConnection(?\PDO $pdo): void
+    {
+        self::$pdo = $pdo;
+    }
+
+    /**
+     * Reset all static state (for testing or long-running processes).
+     * 
+     * Usage:
+     *   DB::reset();  // Clears connection and transaction state
+     */
+    public static function reset(): void
+    {
+        self::$pdo = null;
+        self::$transactionDepth = 0;
+    }
+
+    /**
+     * Create an in-memory SQLite connection for testing.
+     * 
+     * Usage in tests:
+     *   DB::fake();
+     *   DB::raw('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)');
+     */
+    public static function fake(): \PDO
+    {
+        self::$pdo = new \PDO('sqlite::memory:', null, null, [
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            \PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+        self::$transactionDepth = 0;
+        
+        return self::$pdo;
+    }
 }
