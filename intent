@@ -56,6 +56,9 @@ match ($command) {
     'cache:clear' => cacheClear(),
     'make:handler' => makeHandler($args),
     'make:middleware' => makeMiddleware($args),
+    'make:migration' => makeMigration($args),
+    'migrate' => migrate(),
+    'migrate:rollback' => migrateRollback(),
     'routes' => listRoutes(),
     'help', '--help', '-h' => help(),
     default => unknownCommand($command),
@@ -246,6 +249,67 @@ function listRoutes(): void {
     success("Routes loaded from config/routes.php");
 }
 
+function makeMigration(array $args): void {
+    $name = $args[0] ?? null;
+    
+    if (!$name) {
+        error("Usage: php intent make:migration <name>");
+        echo "  Example: php intent make:migration create_users_table" . PHP_EOL;
+        return;
+    }
+    
+    $filename = \Core\Migrator::create($name);
+    success("Migration created: database/migrations/{$filename}");
+}
+
+function migrate(): void {
+    title("Running Migrations");
+    
+    try {
+        $migrator = new \Core\Migrator();
+        $pending = $migrator->getPendingMigrations();
+        
+        if (empty($pending)) {
+            info("Nothing to migrate.");
+            return;
+        }
+        
+        $ran = $migrator->run();
+        
+        foreach ($ran as $migration) {
+            success("Migrated: {$migration}");
+        }
+        
+        echo PHP_EOL;
+        success("Ran " . count($ran) . " migration(s).");
+    } catch (\Exception $e) {
+        error("Migration failed: " . $e->getMessage());
+    }
+}
+
+function migrateRollback(): void {
+    title("Rolling Back Migrations");
+    
+    try {
+        $migrator = new \Core\Migrator();
+        $rolledBack = $migrator->rollback();
+        
+        if (empty($rolledBack)) {
+            info("Nothing to rollback.");
+            return;
+        }
+        
+        foreach ($rolledBack as $migration) {
+            warning("Rolled back: {$migration}");
+        }
+        
+        echo PHP_EOL;
+        success("Rolled back " . count($rolledBack) . " migration(s).");
+    } catch (\Exception $e) {
+        error("Rollback failed: " . $e->getMessage());
+    }
+}
+
 function help(): void {
     echo <<<HELP
 
@@ -260,6 +324,9 @@ function help(): void {
     cache:clear          Clear all cached data
     make:handler <name>  Create a new handler class
     make:middleware <n>  Create a new middleware class
+    make:migration <n>   Create a new migration file
+    migrate              Run pending migrations
+    migrate:rollback     Rollback last batch of migrations
     routes               List all registered routes
     help                 Show this help message
 
@@ -267,9 +334,9 @@ function help(): void {
     php intent install
     php intent serve
     php intent serve 3000
-    php intent cache:clear
-    php intent make:handler User
-    php intent make:middleware RateLimit
+    php intent make:migration create_users_table
+    php intent migrate
+    php intent migrate:rollback
 
 HELP;
 }

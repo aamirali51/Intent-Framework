@@ -5,45 +5,50 @@ declare(strict_types=1);
 namespace Core;
 
 /**
- * Simple file-based logger.
+ * Simple file-based logger (PSR-3 compatible).
  * 
  * Logs messages to storage/logs/ directory.
- * Supports log levels: debug, info, warning, error, critical.
+ * Supports all PSR-3 log levels.
  * 
  * Usage:
  *   Log::info('User logged in', ['user_id' => 123]);
  *   Log::error('Payment failed', ['order_id' => 456]);
+ * 
+ * PSR-3 compatible - can be wrapped with Psr\Log\LoggerInterface
  */
 final class Log
 {
-    private const LEVELS = ['debug', 'info', 'warning', 'error', 'critical'];
+    private const LEVELS = [
+        'emergency', 'alert', 'critical', 'error', 
+        'warning', 'notice', 'info', 'debug'
+    ];
 
     /**
-     * Log a debug message.
+     * System is unusable.
      */
-    public static function debug(string $message, array $context = []): void
+    public static function emergency(string $message, array $context = []): void
     {
-        self::log('debug', $message, $context);
+        self::log('emergency', $message, $context);
     }
 
     /**
-     * Log an info message.
+     * Action must be taken immediately.
      */
-    public static function info(string $message, array $context = []): void
+    public static function alert(string $message, array $context = []): void
     {
-        self::log('info', $message, $context);
+        self::log('alert', $message, $context);
     }
 
     /**
-     * Log a warning message.
+     * Critical conditions.
      */
-    public static function warning(string $message, array $context = []): void
+    public static function critical(string $message, array $context = []): void
     {
-        self::log('warning', $message, $context);
+        self::log('critical', $message, $context);
     }
 
     /**
-     * Log an error message.
+     * Runtime errors.
      */
     public static function error(string $message, array $context = []): void
     {
@@ -51,11 +56,35 @@ final class Log
     }
 
     /**
-     * Log a critical message.
+     * Exceptional occurrences that are not errors.
      */
-    public static function critical(string $message, array $context = []): void
+    public static function warning(string $message, array $context = []): void
     {
-        self::log('critical', $message, $context);
+        self::log('warning', $message, $context);
+    }
+
+    /**
+     * Normal but significant events.
+     */
+    public static function notice(string $message, array $context = []): void
+    {
+        self::log('notice', $message, $context);
+    }
+
+    /**
+     * Interesting events.
+     */
+    public static function info(string $message, array $context = []): void
+    {
+        self::log('info', $message, $context);
+    }
+
+    /**
+     * Detailed debug information.
+     */
+    public static function debug(string $message, array $context = []): void
+    {
+        self::log('debug', $message, $context);
     }
 
     /**
