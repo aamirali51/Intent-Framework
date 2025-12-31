@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Core;
 
+use Closure;
+
 /**
  * Database connection manager and static facade.
  * 
@@ -34,7 +36,7 @@ final class DB
             $pass = Config::get('db.pass', '');
 
             // Build driver-specific DSN
-            $dsn = match($driver) {
+            $dsn = match ($driver) {
                 'sqlite' => "sqlite:{$name}",
                 'pgsql' => "pgsql:host={$host};port={$port};dbname={$name}",
                 'mysql' => "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4",
@@ -144,7 +146,10 @@ final class DB
             return;
         }
 
+        $rawQuery = (new Query($sql, $bindings))->toSql(static::getDriverName());
+
         self::$queryLog[] = [
+            'raw_query' => $rawQuery,
             'query' => $sql,
             'bindings' => $bindings,
             'time' => $time,
@@ -185,7 +190,7 @@ final class DB
     public static function transaction(callable $callback): mixed
     {
         self::beginTransaction();
-        
+
         try {
             $result = $callback();
             self::commit();
@@ -215,7 +220,7 @@ final class DB
             self::connection()->exec("SAVEPOINT {$savepointName}");
             $result = true;
         }
-        
+
         self::$transactionDepth++;
         return $result;
     }
@@ -228,9 +233,9 @@ final class DB
         if (self::$transactionDepth === 0) {
             return false;
         }
-        
+
         self::$transactionDepth--;
-        
+
         if (self::$transactionDepth === 0) {
             return self::connection()->commit();
         } else {
@@ -248,9 +253,9 @@ final class DB
         if (self::$transactionDepth === 0) {
             return false;
         }
-        
+
         self::$transactionDepth--;
-        
+
         if (self::$transactionDepth === 0) {
             return self::connection()->rollBack();
         } else {
@@ -317,7 +322,17 @@ final class DB
             \PDO::ATTR_EMULATE_PREPARES => false,
         ]);
         self::$transactionDepth = 0;
-        
+
         return self::$pdo;
+    }
+
+    public static function setLogger(callable $callback): void
+    {
+        self::$log = Closure::fromCallable($callback);
+    }
+
+    public static function log(Query $query): void
+    {
+        (self::$log)($query);
     }
 }
