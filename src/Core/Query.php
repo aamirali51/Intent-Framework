@@ -22,7 +22,7 @@ class Query
         return $this->pregReplaceCallback(
             static::REGEX_PATTERN_NAMED_PARAMS,
             function (array $match) use ($driver): string {
-                if (!$this->isQuestionMarkMatch($match)) {
+                if (!$this->isNamedParamMatch($match)) {
                     return $match[0];
                 }
 
@@ -81,7 +81,7 @@ class Query
         return $result;
     }
 
-    private function isQuestionMarkMatch(array $match): bool
+    private function isNamedParamMatch(array $match): bool
     {
         return count($match) > 1;
     }
