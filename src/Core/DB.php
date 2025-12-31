@@ -17,6 +17,8 @@ namespace Core;
 final class DB
 {
     private static ?\PDO $pdo = null;
+    private static bool $loggingEnabled = false;
+    private static array $queryLog = [];
 
     /**
      * Get or create PDO connection.
@@ -86,6 +88,75 @@ final class DB
     public static function getDriverName(): string
     {
         return self::connection()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Query Logging (for debugging)
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Enable query logging.
+     * 
+     * Usage:
+     *   DB::enableQueryLog();
+     *   $users = DB::table('users')->get();
+     *   dd(DB::getQueryLog());
+     */
+    public static function enableQueryLog(): void
+    {
+        self::$loggingEnabled = true;
+    }
+
+    /**
+     * Disable query logging.
+     */
+    public static function disableQueryLog(): void
+    {
+        self::$loggingEnabled = false;
+    }
+
+    /**
+     * Get the query log.
+     * 
+     * @return array Array of ['query' => string, 'bindings' => array, 'time' => float]
+     */
+    public static function getQueryLog(): array
+    {
+        return self::$queryLog;
+    }
+
+    /**
+     * Clear the query log.
+     */
+    public static function flushQueryLog(): void
+    {
+        self::$queryLog = [];
+    }
+
+    /**
+     * Log a query (called internally by QueryBuilder).
+     * 
+     * @internal
+     */
+    public static function logQuery(string $sql, array $bindings = [], ?float $time = null): void
+    {
+        if (!self::$loggingEnabled) {
+            return;
+        }
+
+        self::$queryLog[] = [
+            'query' => $sql,
+            'bindings' => $bindings,
+            'time' => $time,
+        ];
+    }
+
+    /**
+     * Check if query logging is enabled.
+     */
+    public static function isLogging(): bool
+    {
+        return self::$loggingEnabled;
     }
 
     /**
@@ -227,6 +298,8 @@ final class DB
     {
         self::$pdo = null;
         self::$transactionDepth = 0;
+        self::$loggingEnabled = false;
+        self::$queryLog = [];
     }
 
     /**

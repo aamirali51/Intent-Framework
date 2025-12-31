@@ -18,6 +18,27 @@ if (!function_exists('config')) {
     }
 }
 
+if (!function_exists('e')) {
+    /**
+     * Escape HTML entities for safe output.
+     * 
+     * Use this in PHP views to prevent XSS attacks.
+     * Twig auto-escapes, but PHP views need manual escaping.
+     * 
+     * Usage in PHP views:
+     *   <h1><?= e($title) ?></h1>
+     *   <p><?= e($userInput) ?></p>
+     */
+    function e(?string $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+        
+        return htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8', true);
+    }
+}
+
 if (!function_exists('env')) {
     /**
      * Get an environment variable.
