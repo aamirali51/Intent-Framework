@@ -1,6 +1,6 @@
 # Intent Framework - Technical Documentation
 
-> **Version:** 0.4.0  
+> **Version:** 0.5.0  
 > **PHP Version:** 8.2+  
 > **Architecture:** AI-native, zero-boilerplate micro-framework
 
@@ -16,6 +16,7 @@
 | **AI-Native** | Predictable patterns for AI-assisted development |
 | **Strict Types** | `declare(strict_types=1)` everywhere |
 | **PSR-4** | Standard autoloading via Composer |
+| **PSR-3 Compatible** | Logging follows PSR-3 log levels |
 
 ---
 
@@ -36,20 +37,25 @@ INTENT/
 │   │   ├── DB.php         # Connection manager + facade
 │   │   ├── QueryBuilder.php # Query building + execution
 │   │   ├── Event.php      # Event dispatcher
-│   │   ├── Log.php        # Logging
+│   │   ├── Log.php        # PSR-3 compatible logging
 │   │   ├── Middleware.php # Middleware interface
+│   │   ├── Migration.php  # Database migrations
 │   │   ├── Package.php    # Package discovery
 │   │   ├── Paginator.php  # Pagination
 │   │   ├── Pipeline.php   # Middleware execution
+│   │   ├── RateLimiter.php # Rate limiting
 │   │   ├── Registry.php   # Service registry
 │   │   ├── Request.php    # HTTP request
 │   │   ├── Response.php   # HTTP response
 │   │   ├── Route.php      # Route facade
 │   │   ├── Router.php     # Routing
 │   │   ├── Schema.php     # Dev-only schema
+│   │   ├── SecurityHeaders.php # Security headers middleware
 │   │   ├── Session.php    # Session management
 │   │   ├── Upload.php     # File uploads
-│   │   └── Validator.php  # Input validation
+│   │   ├── Validator.php  # Input validation
+│   │   └── Exceptions/    # Custom exceptions
+│   │       └── HttpExceptions.php
 │   └── helpers.php        # Global helpers
 │
 ├── config/                 # Configuration files
@@ -60,7 +66,15 @@ INTENT/
 │   ├── Api/               # File-based routes
 │   ├── Handlers/          # Route handlers
 │   ├── Middleware/        # Custom middleware
+│   │   ├── AuthMiddleware.php
+│   │   ├── CsrfMiddleware.php
+│   │   ├── GuestMiddleware.php
+│   │   ├── LogMiddleware.php
+│   │   └── RateLimitMiddleware.php
 │   └── Models/            # Data models
+│
+├── database/               # Database files
+│   └── migrations/        # Migration files
 │
 ├── resources/              # Application resources
 │   └── views/             # Templates
@@ -89,6 +103,8 @@ $request->get('page', 1);      // Query param
 $request->post('name');        // POST param
 $request->json();              // JSON body
 $request->header('auth');      // Header
+$request->ip();                // Client IP
+$request->path;                // Request path
 ```
 
 ### 3.3 Response (Fluent)
@@ -97,6 +113,7 @@ $response->json(['users' => $users]);
 $response->json(['error' => 'Not found'], 404);
 $response->redirect('/login');
 $response->status(201)->json($data);
+$response->header('X-Custom', 'value');
 ```
 
 ### 3.4 Validator
@@ -335,38 +352,71 @@ Route::group(['prefix' => '/api'], function () {
 ---
 
 ### 3.13 Rate Limiting
+
+**Two approaches available:**
+
+#### Static Class (Core\RateLimiter)
+```php
+// Apply as middleware with fluent factories
+Route::post('/login', $handler)->middleware(RateLimiter::perMinute(5));
+Route::post('/api/send', $handler)->middleware(RateLimiter::perHour(100));
+Route::post('/heavy', $handler)->middleware(RateLimiter::perDay(10));
+
+// Or with custom limits
+Route::post('/api', $handler)->middleware(RateLimiter::middleware(100, 300)); // 100 requests per 5 minutes
+
+// Manual usage in code
+if (RateLimiter::tooManyAttempts('login:' . $ip, 5)) {
+    return response()->json(['error' => 'Too many attempts'], 429);
+}
+RateLimiter::hit('login:' . $ip, 60);
+RateLimiter::clear('login:' . $ip);
+```
+
+#### Middleware Class (App\Middleware\RateLimitMiddleware)
 ```php
 // Default: 60 requests per minute
 Route::post('/api/login', $handler)->middleware(RateLimitMiddleware::class);
 
 // Custom limits (5 requests per 60 seconds)
 Route::post('/api/login', $handler)->middleware(new RateLimitMiddleware(5, 60));
-
-// Response headers added:
-// X-RateLimit-Limit: 60
-// X-RateLimit-Remaining: 57
-
-// Exceeding limit returns 429 Too Many Requests
 ```
 
-### 3.14 Logging
+**Response headers added:**
+```
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 57
+Retry-After: 45  (when rate limited)
+```
+
+**Exceeding limit returns 429 Too Many Requests**
+
+**Storage**: File-based - no Redis required. Stores in `storage/cache/ratelimit/`.
+
+### 3.14 Logging (PSR-3 Compatible)
 ```php
-// Using Log class directly
-Log::info('User logged in', ['user_id' => 123]);
-Log::error('Payment failed', ['order_id' => 456]);
-Log::debug('Debug message');
-Log::warning('Low disk space');
+// All PSR-3 log levels supported
+Log::emergency('System down');
+Log::alert('Action needed');
 Log::critical('Database connection lost');
+Log::error('Payment failed', ['order_id' => 456]);
+Log::warning('Low disk space');
+Log::notice('User updated profile');
+Log::info('User logged in', ['user_id' => 123]);
+Log::debug('Debug message');
 
 // Using helper functions
 logger()->info('Message');
 logger('error', 'Something failed');
 log_message('info', 'User login', ['id' => 1]);
 
-// Logs stored in storage/logs/YYYY-MM-DD.log
+// Log management
 Log::read();              // Read today's log
 Log::read('2024-01-15');  // Read specific date
+Log::dates();             // Get available log dates
 Log::clear();             // Clear all logs
+
+// Logs stored in storage/logs/YYYY-MM-DD.log
 ```
 
 ### 3.15 Package Auto-Discovery
@@ -389,6 +439,135 @@ Package::all();           // All discovered packages
 Package::has('vendor/pkg'); // Check if discovered
 ```
 
+### 3.16 Database Migrations
+```php
+// Create a migration
+php intent make:migration create_users_table
+
+// Run pending migrations
+php intent migrate
+
+// Rollback last batch
+php intent migrate:rollback
+```
+
+**Migration file example:**
+```php
+<?php
+declare(strict_types=1);
+
+use Core\Migration;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $this->execute("
+            CREATE TABLE users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+    }
+
+    public function down(): void
+    {
+        $this->execute("DROP TABLE users");
+    }
+};
+```
+
+**Philosophy**: No schema builder - just raw SQL. Simple and powerful.
+
+**Features:**
+- Batch-based rollbacks
+- Automatic migrations table creation
+- MySQL/PostgreSQL/SQLite support
+- Query helper with bindings: `$this->query($sql, $bindings)`
+
+### 3.17 Custom Exceptions
+
+Located in `Core\Exceptions\HttpExceptions.php`:
+
+```php
+use Core\Exceptions\NotFoundException;
+use Core\Exceptions\UnauthorizedException;
+use Core\Exceptions\ForbiddenException;
+use Core\Exceptions\ValidationException;
+use Core\Exceptions\TooManyRequestsException;
+use Core\Exceptions\ServerException;
+use Core\Exceptions\MaintenanceException;
+
+// Throw when resource not found
+throw new NotFoundException('User not found');
+
+// Throw when authentication required
+throw new UnauthorizedException('Please login');
+
+// Throw when authenticated but not allowed
+throw new ForbiddenException('Admin access required');
+
+// Throw with validation errors
+throw new ValidationException(['email' => ['Invalid email format']]);
+
+// Throw when rate limited
+throw new TooManyRequestsException(60, 'Try again later');
+
+// Throw for server errors
+throw new ServerException('Database error');
+
+// Throw for maintenance mode
+throw new MaintenanceException('Back in 5 minutes');
+```
+
+**All exceptions extend `IntentException`:**
+- `getStatusCode()` - Returns HTTP status code
+- `render()` - Returns array for JSON response
+
+### 3.18 Security Headers Middleware
+
+```php
+use Core\SecurityHeaders;
+
+// Apply to all admin routes
+Route::group(['middleware' => SecurityHeaders::class], function () {
+    Route::get('/admin', $handler);
+});
+
+// Per-route application
+Route::get('/admin', $handler)->middleware(new SecurityHeaders());
+
+// With Content Security Policy
+Route::get('/app', $handler)->middleware(SecurityHeaders::withCSP("default-src 'self'"));
+
+// Frame control
+Route::get('/embed', $handler)->middleware(SecurityHeaders::allowFrames());
+Route::get('/secure', $handler)->middleware(SecurityHeaders::denyFrames());
+
+// Strict mode for sensitive pages
+Route::get('/payment', $handler)->middleware(SecurityHeaders::strict());
+```
+
+**Default headers applied:**
+```
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+```
+
+**Strict mode adds:**
+```
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+X-Frame-Options: DENY
+Referrer-Policy: no-referrer
+```
+
 ---
 
 ## 4. Helpers
@@ -397,7 +576,8 @@ Package::has('vendor/pkg'); // Check if discovered
 |--------|-------|
 | `config($key)` | Get config value |
 | `env($key)` | Get environment variable |
-| `view($name, $data)` | Render template |
+| `e($value)` | Escape HTML entities (XSS protection) |
+| `view($name, $data)` | Render template (Twig or PHP) |
 | `request()` | Get Request instance |
 | `response()` | Get Response instance |
 | `json($data, $status)` | JSON response |
@@ -413,6 +593,8 @@ Package::has('vendor/pkg'); // Check if discovered
 | `csrf_field()` | Hidden input field |
 | `logger()` | Logging access |
 | `log_message($lvl, $msg)` | Log a message |
+| `upload($key)` | Get Upload instance |
+| `slug($text)` | Generate URL-safe slug |
 | `dd($vars)` | Dump and die |
 
 ---
@@ -420,12 +602,17 @@ Package::has('vendor/pkg'); // Check if discovered
 ## 5. CLI
 
 ```bash
-php intent serve          # Start server (port 8080)
-php intent serve 3000     # Custom port
-php intent cache:clear    # Clear cache
+php intent install         # Interactive setup (prompts for Twig)
+php intent serve           # Start server (port 8080)
+php intent serve 3000      # Custom port
+php intent cache:clear     # Clear cache
 php intent make:handler UserHandler
 php intent make:middleware RateLimitMiddleware
-php intent help           # Show help
+php intent make:migration create_users_table
+php intent migrate         # Run pending migrations
+php intent migrate:rollback # Rollback last batch
+php intent routes          # List registered routes
+php intent help            # Show help
 ```
 
 ---
@@ -449,8 +636,8 @@ vendor\bin\phpunit         # Direct run
 ```
 
 **Test Coverage:**
-- 161 tests, 298 assertions
-- Config, Response, Router, Validator, Pipeline, Session, Event, Cache, Registry, Upload, Paginator
+- 169 tests, 310 assertions
+- Config, Response, Router, Validator, Pipeline, Session, Event, Cache, Registry, Upload, Paginator, Package, Log, Request, RouteGroup
 
 ---
 
@@ -464,7 +651,10 @@ vendor\bin\phpunit         # Direct run
 | Schema | Dev-only, disabled in prod |
 | Sessions | Regenerated on login |
 | CSRF | Token validation via middleware |
-| Rate Limiting | Cache-based request throttling |
+| Rate Limiting | File-based request throttling |
+| XSS Protection | `e()` helper for HTML escaping |
+| Security Headers | Configurable middleware |
+| HTTP Exceptions | Typed exceptions with status codes |
 
 ---
 
@@ -480,21 +670,25 @@ vendor\bin\phpunit         # Direct run
 | src/Core/QueryBuilder.php | Query building + execution |
 | src/Core/Event.php | Event dispatcher |
 | src/Core/Middleware.php | Interface |
+| src/Core/Migration.php | Database migrations + Migrator |
 | src/Core/Pipeline.php | Middleware runner |
+| src/Core/RateLimiter.php | Rate limiting (file-based) |
 | src/Core/Request.php | HTTP request |
 | src/Core/Response.php | HTTP response |
 | src/Core/Route.php | Route facade |
 | src/Core/Router.php | Routing |
 | src/Core/Schema.php | Auto-schema |
+| src/Core/SecurityHeaders.php | Security headers middleware |
 | src/Core/Session.php | Sessions |
 | src/Core/Validator.php | Validation |
-| src/Core/Log.php | File-based logging |
+| src/Core/Log.php | PSR-3 compatible logging |
 | src/Core/Package.php | Package auto-discovery |
 | src/Core/Registry.php | Service registry |
 | src/Core/Upload.php | File upload handling |
 | src/Core/Paginator.php | Pagination helper |
+| src/Core/Exceptions/HttpExceptions.php | Custom HTTP exceptions |
 
-**Total: ~4500 lines of core code**
+**Total: ~5000 lines of core code**
 
 ---
 
