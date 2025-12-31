@@ -21,6 +21,7 @@ final class DB
     private static ?\PDO $pdo = null;
     private static bool $loggingEnabled = false;
     private static array $queryLog = [];
+    private static ?\Closure $log = null;
 
     /**
      * Get or create PDO connection.
@@ -305,6 +306,7 @@ final class DB
         self::$transactionDepth = 0;
         self::$loggingEnabled = false;
         self::$queryLog = [];
+        self::$log = null;
     }
 
     /**
@@ -326,13 +328,32 @@ final class DB
         return self::$pdo;
     }
 
+    /**
+     * Set a custom logger callback for query logging.
+     * 
+     * The callback receives a Query object that can be converted to raw SQL.
+     * 
+     * Usage:
+     *   DB::setLogger(function(Query $query) {
+     *       Log::debug($query->toSql(DB::getDriverName()));
+     *   });
+     * 
+     * @param callable $callback Function that receives Query object
+     */
     public static function setLogger(callable $callback): void
     {
         self::$log = Closure::fromCallable($callback);
     }
 
+    /**
+     * Log a query using the custom logger.
+     * 
+     * @param Query $query The query to log
+     */
     public static function log(Query $query): void
     {
-        (self::$log)($query);
+        if (self::$log !== null) {
+            (self::$log)($query);
+        }
     }
 }

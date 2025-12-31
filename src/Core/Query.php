@@ -6,8 +6,23 @@ namespace Core;
 
 use DateTimeInterface;
 
-class Query
+/**
+ * Query reconstruction helper for debugging.
+ * 
+ * Reconstructs a prepared statement with bindings replaced,
+ * making it easy to copy queries directly to an SQL editor.
+ * 
+ * Contributed by @UniForceMusic
+ * 
+ * Usage:
+ *   $query = new Query('SELECT * FROM users WHERE id = :id', [':id' => 1]);
+ *   echo $query->toSql('mysql'); // SELECT * FROM users WHERE id = 1
+ */
+final class Query
 {
+    /**
+     * Regex pattern to match named parameters while respecting quoted strings.
+     */
     public const REGEX_PATTERN_NAMED_PARAMS = '/(?:\'(?:\\\\.|[^\\\\\'])*\'|\"(?:\\\\.|[^\\\\\"])*\"|\`(?:\\\\.|[^\\\\\`])*\`|\[(?:\\\\.|[^\[\]])*?\]|(\:\w+)(?=(?:[^\'\"\`\[\]]|\'(?:\\\\.|[^\\\\\'])*\'|\"(?:\\\\.|[^\\\\\"])*\"|\`(?:\\\\.|[^\\\\\`])*\`|\[(?:\\\\.|[^\[\]])*?\])*$)|(?:\-\-[^\r\n]*|\/\*[\s\S]*?\*\/|\#.*))/m';
     public const INI_PCRE_JIT = 'pcre.jit';
 
@@ -17,6 +32,12 @@ class Query
     ) {
     }
 
+    /**
+     * Convert the query to raw SQL with bindings replaced.
+     * 
+     * @param string $driver Database driver name (mysql, pgsql, sqlite)
+     * @return string The reconstructed SQL query
+     */
     public function toSql(string $driver): string
     {
         return $this->pregReplaceCallback(
