@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
   <img src="https://img.shields.io/badge/Tests-203%20Passing-brightgreen?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/PHPStan-Level%208-4ade80?style=for-the-badge" alt="PHPStan Level 8">
-  <img src="https://img.shields.io/badge/Version-0.6.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.6.1-blue?style=for-the-badge" alt="Version">
 </p>
 
 <p align="center">
