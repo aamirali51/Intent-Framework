@@ -94,6 +94,18 @@ final class Auth
     }
 
     /**
+     * Set user for current request (without session).
+     * 
+     * Used by API token authentication for stateless requests.
+     * The user is only available for this request - not persisted.
+     */
+    public static function setUser(array $user): void
+    {
+        unset($user[self::$passwordField]);
+        self::$user = $user;
+    }
+
+    /**
      * Log out the current user.
      */
     public static function logout(): void
@@ -108,9 +120,17 @@ final class Auth
 
     /**
      * Check if a user is logged in.
+     * 
+     * Returns true for both session-based auth and API token auth.
      */
     public static function check(): bool
     {
+        // Check if user was set via setUser() (API token auth)
+        if (self::$user !== null) {
+            return true;
+        }
+        
+        // Check session (web auth)
         Session::start();
         return Session::has(self::SESSION_KEY);
     }

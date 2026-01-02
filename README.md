@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PHP-8.2+-8892BF?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
-  <img src="https://img.shields.io/badge/Tests-169%20Passing-brightgreen?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-203%20Passing-brightgreen?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/PHPStan-Level%208-4ade80?style=for-the-badge" alt="PHPStan Level 8">
   <img src="https://img.shields.io/badge/Version-0.5.0-blue?style=for-the-badge" alt="Version">
 </p>
@@ -239,7 +239,7 @@ vendor/bin/phpunit
 - [x] Rate limiting middleware
 - [x] Logging system (`Log` class + helpers)
 - [x] Package auto-discovery bootstrap
-- [ ] `intent/auth` package (OAuth, API tokens)
+- [x] `intent/auth` package (API tokens, OAuth)
 - [ ] Full CMS demo application
 - [ ] Package ecosystem
 

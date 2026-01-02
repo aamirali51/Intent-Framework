@@ -152,9 +152,74 @@ auth()->user();                // Get user
 user()['name'];                // User's name
 auth()->logout();
 Auth::createUser($data);       // Auto-hashes password
+Auth::setUser($data);          // Set user for API requests (stateless)
 ```
 
-### 3.8 Events
+### 3.8 API Tokens
+```php
+// Generate a token (returns plain token - show once!)
+$token = ApiToken::create($userId);
+$token = ApiToken::create($userId, 'mobile-app', 3600); // With name + TTL
+
+// Validate token from request
+$user = ApiToken::validate($token);       // Returns user or null
+$token = ApiToken::fromRequest($request); // Extract Bearer token
+
+// Revoke tokens
+ApiToken::revoke($tokenId);               // Single token
+ApiToken::revokeToken($plainToken);       // By token value
+ApiToken::revokeAll($userId);             // All user tokens
+
+// Token management
+ApiToken::userTokens($userId);            // List user's tokens
+ApiToken::pruneExpired();                 // Clean up expired tokens
+ApiToken::check($token);                  // Quick validation check
+
+// Helper function
+$token = api_token($userId, 'api-key', 86400);
+```
+
+**Storage:** Tokens stored hashed (SHA-256) in `api_tokens` table.
+
+**AuthMiddleware:** Automatically checks both session and Bearer token:
+```php
+// Both work:
+Route::get('/api/me', $handler)->middleware(AuthMiddleware::class);
+
+// Session auth: Uses session cookie
+// API auth: Authorization: Bearer <token>
+```
+
+### 3.9 OAuth (Social Login)
+```php
+// Redirect to provider
+return redirect(OAuth::redirect('google'));
+return redirect(OAuth::redirect('github', ['scope' => 'user:email']));
+
+// Handle callback
+$userData = OAuth::callback('google', $code, $state);
+// Returns: ['id', 'email', 'name', 'avatar', 'provider', 'raw']
+
+// Check provider support
+OAuth::providers();              // ['google', 'github', 'facebook']
+OAuth::hasProvider('google');    // true if configured
+
+// Helper function
+return redirect(oauth_redirect('google'));
+```
+
+**Configuration:** `config/auth.php`
+```php
+'oauth' => [
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => '/auth/google/callback',
+    ],
+]
+```
+
+### 3.10 Events
 ```php
 Event::listen('user.created', fn($user) => sendEmail($user));
 event('user.created', $user);
@@ -595,6 +660,8 @@ Referrer-Policy: no-referrer
 | `log_message($lvl, $msg)` | Log a message |
 | `upload($key)` | Get Upload instance |
 | `slug($text)` | Generate URL-safe slug |
+| `api_token($userId)` | Generate API token |
+| `oauth_redirect($provider)` | OAuth redirect URL |
 | `dd($vars)` | Dump and die |
 
 ---
@@ -636,7 +703,7 @@ vendor\bin\phpunit         # Direct run
 ```
 
 **Test Coverage:**
-- 169 tests, 310 assertions
+- 203 tests, 368 assertions
 - Config, Response, Router, Validator, Pipeline, Session, Event, Cache, Registry, Upload, Paginator, Package, Log, Request, RouteGroup
 
 ---
@@ -663,7 +730,9 @@ vendor\bin\phpunit         # Direct run
 | File | Purpose |
 |------|---------|
 | src/Core/App.php | Main orchestrator |
-| src/Core/Auth.php | Authentication |
+| src/Core/ApiToken.php | API token authentication |
+| src/Core/Auth.php | Session authentication |
+| src/Core/OAuth.php | OAuth 2.0 social login |
 | src/Core/Cache.php | File caching |
 | src/Core/Config.php | Configuration |
 | src/Core/DB.php | Connection manager + facade |

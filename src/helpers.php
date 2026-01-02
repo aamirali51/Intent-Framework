@@ -452,3 +452,30 @@ if (!function_exists('slug')) {
     }
 }
 
+if (!function_exists('api_token')) {
+    /**
+     * Generate an API token for a user.
+     * 
+     * Usage:
+     *   $token = api_token($userId);
+     *   $token = api_token($userId, 'mobile-app', 3600);
+     */
+    function api_token(int $userId, string $name = 'default', ?int $ttl = null): string
+    {
+        return \Core\ApiToken::create($userId, $name, $ttl);
+    }
+}
+
+if (!function_exists('oauth_redirect')) {
+    /**
+     * Get OAuth redirect URL for a provider.
+     * 
+     * Usage:
+     *   return redirect(oauth_redirect('google'));
+     *   return redirect(oauth_redirect('github', ['scope' => 'user:email']));
+     */
+    function oauth_redirect(string $provider, array $options = []): string
+    {
+        return \Core\OAuth::redirect($provider, $options);
+    }
+}
