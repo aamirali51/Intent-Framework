@@ -87,6 +87,30 @@ final class Request
         return str_contains($accept, 'application/json');
     }
 
+    /**
+     * Get the client IP address.
+     * 
+     * Checks common proxy headers first, falls back to REMOTE_ADDR.
+     */
+    public function ip(): string
+    {
+        // Check for forwarded IP (behind proxy/load balancer)
+        $forwardedFor = $this->server['HTTP_X_FORWARDED_FOR'] ?? null;
+        if ($forwardedFor !== null) {
+            // Take the first IP in the chain (original client)
+            $ips = array_map('trim', explode(',', $forwardedFor));
+            return $ips[0];
+        }
+
+        // Check for real IP header (Cloudflare, etc.)
+        if (isset($this->server['HTTP_X_REAL_IP'])) {
+            return $this->server['HTTP_X_REAL_IP'];
+        }
+
+        // Fallback to direct connection IP
+        return $this->server['REMOTE_ADDR'] ?? '127.0.0.1';
+    }
+
     private function parsePath(string $uri): string
     {
         $path = parse_url($uri, PHP_URL_PATH) ?? '/';

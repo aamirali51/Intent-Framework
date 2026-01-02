@@ -25,3 +25,6 @@ parameters:
         - identifier: assign.propertyType
         # Allow foreach on mixed types (validated at runtime)
         - identifier: foreach.nonIterable
+        # Twig is an optional dependency - classes only used inside class_exists() check
+        - identifier: class.notFound
+
