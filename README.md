@@ -155,6 +155,37 @@ cd my-app
 composer install
 ```
 
+**Option 3: Using as Library**
+
+If you want to use Intent Framework as a dependency in an existing project:
+
+```bash
+composer require intent/framework
+```
+
+**Important Notes:**
+1. **Define `BASE_PATH` first** — Must be set before anything else
+2. **Let `Core\App` handle initialization** — Don't load routes manually before App is constructed
+3. **Config uses flat dot-notation keys** — e.g., `'app.name'`, not nested arrays
+
+**Example bootstrap:**
+```php
+<?php
+declare(strict_types=1);
+
+// Define BASE_PATH first (required)
+define('BASE_PATH', __DIR__);
+
+// Load autoloader
+require BASE_PATH . '/vendor/autoload.php';
+
+// App handles config/routes internally via Route::setRouter()
+$app = new Core\App();
+$app->run();
+```
+
+> ⚠️ The App constructor initializes the Router internally via `Route::setRouter()`. If you load routes before constructing App, the router won't be initialized.
+
 ---
 
 ## 🚀 Quick Start
