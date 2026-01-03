@@ -1,6 +1,6 @@
 # Intent Framework - Technical Documentation
 
-> **Version:** 0.6.1  
+> **Version:** 0.6.2  
 > **PHP Version:** 8.2+  
 > **Architecture:** AI-native, zero-boilerplate micro-framework
 
@@ -17,6 +17,7 @@
 | **Strict Types** | `declare(strict_types=1)` everywhere |
 | **PSR-4** | Standard autoloading via Composer |
 | **PSR-3 Compatible** | Logging follows PSR-3 log levels |
+| **PSR-16 Compatible** | Cache implements SimpleCache interface |
 
 ---
 
@@ -225,13 +226,41 @@ Event::listen('user.created', fn($user) => sendEmail($user));
 event('user.created', $user);
 ```
 
-### 3.9 Cache
+### 3.9 Cache (PSR-16 SimpleCache)
+
+**PSR-16 Compliant**: Implements `Psr\SimpleCache\CacheInterface`
+
 ```php
-cache('key', $value, 3600);    // Store 1 hour
-cache('key');                  // Get
+// Static API (convenience)
+Cache::put('key', $value, 3600);       // Store for 1 hour
+Cache::pull('key');                     // Retrieve
+Cache::exists('key');                   // Check existence
+Cache::forget('key');                   // Remove
+Cache::flush();                         // Clear all
 Cache::remember('key', 3600, fn() => expensiveCall());
-cache()->flush();              // Clear all
+
+// PSR-16 Instance API
+$cache = Cache::instance();
+$cache->set('key', $value, 3600);       // Store
+$cache->get('key');                      // Retrieve
+$cache->has('key');                      // Check existence
+$cache->delete('key');                   // Remove
+$cache->clear();                         // Clear all
+$cache->getMultiple(['a', 'b']);         // Bulk get
+$cache->setMultiple(['a' => 1, 'b' => 2]); // Bulk set
+$cache->deleteMultiple(['a', 'b']);      // Bulk delete
+
+// TTL supports DateInterval
+$cache->set('key', 'value', new DateInterval('PT1H'));
+Cache::remember('key', new DateInterval('P1D'), $callback);
+
+// Helper function
+cache('key', $value, 3600);            // Store
+cache('key');                          // Get
+cache()->flush();                      // Clear all
 ```
+
+**Key Validation**: PSR-16 reserved characters `{}()/\@:` throw `InvalidCacheKeyException`.
 
 ### 3.10 DB (Query Builder)
 
@@ -703,8 +732,8 @@ vendor\bin\phpunit         # Direct run
 ```
 
 **Test Coverage:**
-- 203 tests, 368 assertions
-- Config, Response, Router, Validator, Pipeline, Session, Event, Cache, Registry, Upload, Paginator, Package, Log, Request, RouteGroup
+- 220 tests, 393 assertions
+- Config, Response, Router, Validator, Pipeline, Session, Event, Cache, Registry, Upload, Paginator, Package, Log, Request, RouteGroup, ApiToken, OAuth
 
 ---
 

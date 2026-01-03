@@ -4,7 +4,8 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": "^8.2"
+        "php": "^8.2",
+        "psr/simple-cache": "^3.0"
     },
     "suggest": {
         "twig/twig": "For Twig templating support (auto-detected, optional)"

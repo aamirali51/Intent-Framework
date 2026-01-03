@@ -332,7 +332,7 @@ if (!function_exists('cache')) {
             return new class {
                 public function flush(): void { \Core\Cache::flush(); }
                 public function forget(string $key): void { \Core\Cache::forget($key); }
-                public function has(string $key): bool { return \Core\Cache::has($key); }
+                public function has(string $key): bool { return \Core\Cache::exists($key); }
             };
         }
         
@@ -341,7 +341,7 @@ if (!function_exists('cache')) {
             return $value;
         }
         
-        return \Core\Cache::get($key);
+        return \Core\Cache::pull($key);
     }
 }
 

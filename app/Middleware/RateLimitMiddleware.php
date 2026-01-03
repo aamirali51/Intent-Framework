@@ -41,7 +41,7 @@ class RateLimitMiddleware implements Middleware
     {
         $key = $this->resolveRequestKey($request);
         
-        $attempts = (int) Cache::get($key, 0);
+        $attempts = (int) Cache::pull($key, 0);
 
         if ($attempts >= $this->maxAttempts) {
             return $this->buildTooManyRequestsResponse($request);
