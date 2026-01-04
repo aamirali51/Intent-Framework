@@ -25,6 +25,8 @@ final class Log
 
     /**
      * System is unusable.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function emergency(string $message, array $context = []): void
     {
@@ -33,6 +35,8 @@ final class Log
 
     /**
      * Action must be taken immediately.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function alert(string $message, array $context = []): void
     {
@@ -41,6 +45,8 @@ final class Log
 
     /**
      * Critical conditions.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function critical(string $message, array $context = []): void
     {
@@ -49,6 +55,8 @@ final class Log
 
     /**
      * Runtime errors.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function error(string $message, array $context = []): void
     {
@@ -57,6 +65,8 @@ final class Log
 
     /**
      * Exceptional occurrences that are not errors.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function warning(string $message, array $context = []): void
     {
@@ -65,6 +75,8 @@ final class Log
 
     /**
      * Normal but significant events.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function notice(string $message, array $context = []): void
     {
@@ -73,6 +85,8 @@ final class Log
 
     /**
      * Interesting events.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function info(string $message, array $context = []): void
     {
@@ -81,6 +95,8 @@ final class Log
 
     /**
      * Detailed debug information.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function debug(string $message, array $context = []): void
     {
@@ -89,6 +105,8 @@ final class Log
 
     /**
      * Write a log entry.
+     * 
+     * @param array<string, mixed> $context
      */
     public static function log(string $level, string $message, array $context = []): void
     {
@@ -123,6 +141,8 @@ final class Log
 
     /**
      * Format a log entry.
+     * 
+     * @param array<string, mixed> $context
      */
     private static function formatEntry(string $level, string $message, array $context): string
     {
@@ -165,6 +185,10 @@ final class Log
 
         $files = glob($logDir . DIRECTORY_SEPARATOR . '*.log');
         
+        if ($files === false) {
+            return;
+        }
+
         foreach ($files as $file) {
             unlink($file);
         }
@@ -172,6 +196,8 @@ final class Log
 
     /**
      * Get available log dates.
+     * 
+     * @return array<int, string>
      */
     public static function dates(): array
     {
@@ -182,6 +208,11 @@ final class Log
         }
 
         $files = glob($logDir . DIRECTORY_SEPARATOR . '*.log');
+        
+        if ($files === false) {
+            return [];
+        }
+
         $dates = [];
 
         foreach ($files as $file) {

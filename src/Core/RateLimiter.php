@@ -146,7 +146,7 @@ final class RateLimiter
             return 0;
         }
         
-        return max(0, $data['expires'] - time());
+        return (int) max(0, $data['expires'] - time());
     }
 
     /**
@@ -192,6 +192,9 @@ final class RateLimiter
         return self::getStoragePath() . '/' . md5($key) . '.json';
     }
 
+    /**
+     * @return array{attempts: int, expires: int}|null
+     */
     private static function get(string $key): ?array
     {
         $file = self::filePath($key);
@@ -201,9 +204,17 @@ final class RateLimiter
         }
         
         $content = file_get_contents($file);
-        return $content ? json_decode($content, true) : null;
+        if ($content === false) {
+            return null;
+        }
+        /** @var array{attempts: int, expires: int}|null $decoded */
+        $decoded = json_decode($content, true);
+        return is_array($decoded) ? $decoded : null;
     }
 
+    /**
+     * @param array{attempts: int, expires: int} $data
+     */
     private static function put(string $key, array $data): void
     {
         file_put_contents(

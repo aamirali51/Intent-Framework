@@ -26,6 +26,9 @@ final class Query
     public const REGEX_PATTERN_NAMED_PARAMS = '/(?:\'(?:\\\\.|[^\\\\\'])*\'|\"(?:\\\\.|[^\\\\\"])*\"|\`(?:\\\\.|[^\\\\\`])*\`|\[(?:\\\\.|[^\[\]])*?\]|(\:\w+)(?=(?:[^\'\"\`\[\]]|\'(?:\\\\.|[^\\\\\'])*\'|\"(?:\\\\.|[^\\\\\"])*\"|\`(?:\\\\.|[^\\\\\`])*\`|\[(?:\\\\.|[^\[\]])*?\])*$)|(?:\-\-[^\r\n]*|\/\*[\s\S]*?\*\/|\#.*))/m';
     public const INI_PCRE_JIT = 'pcre.jit';
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function __construct(
         public string $sql,
         public array $params
@@ -80,7 +83,13 @@ final class Query
             );
         }
 
-        return (string) $value;
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+        
+        /** @var string $stringValue */
+        $stringValue = $value;
+        return $stringValue;
     }
 
     private function pregReplaceCallback(string $pattern, callable $callback, string $subject): string
@@ -102,6 +111,9 @@ final class Query
         return $result;
     }
 
+    /**
+     * @param array<int|string, mixed> $match
+     */
     private function isNamedParamMatch(array $match): bool
     {
         return count($match) > 1;

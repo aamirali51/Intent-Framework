@@ -1,9 +1,9 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PHP-8.2+-8892BF?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
-  <img src="https://img.shields.io/badge/Tests-203%20Passing-brightgreen?style=for-the-badge" alt="Tests">
-  <img src="https://img.shields.io/badge/PHPStan-Level%208-4ade80?style=for-the-badge" alt="PHPStan Level 8">
-  <img src="https://img.shields.io/badge/Version-0.6.1-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Tests-220%20Passing-brightgreen?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/PHPStan-Level%209-4ade80?style=for-the-badge" alt="PHPStan Level 9">
+  <img src="https://img.shields.io/badge/Version-0.7.0-blue?style=for-the-badge" alt="Version">
 </p>
 
 <p align="center">
@@ -34,7 +34,7 @@
   <em>Yes, most of this was written by AI. Yes, I'm not a PHP expert. No, I don't care.</em>
 </p>
 
-> ⚠️ **Early Development** — Intent is functional and tested (203 tests!), but it's still young. Perfect for side projects, learning, and experimentation. Not yet battle-tested in production. Bugs? Probably. PRs? Welcome.
+> ⚠️ **Early Development** — Intent is functional and tested (220 tests, 393 assertions!), but it's still young. Perfect for side projects, learning, and experimentation. Not yet battle-tested in production. Bugs? Probably. PRs? Welcome.
 
 ---
 
@@ -96,8 +96,8 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 | The Criticism | The Reality Now |
 |---------------|-----------------|
 | "AI-generated slop" | Yes, AI-assisted — and it's clean, tested, and consistent |
-| "No tests" | **169 tests, 310 assertions** via PHPUnit |
-| "Incomplete" | v0.5.0 has middleware, auth, sessions, events, cache, CLI, OR conditions, type casting |
+| "No tests" | **220 tests, 393 assertions** via PHPUnit |
+| "Incomplete" | v0.7.0 has middleware, auth, sessions, events, cache, CLI, OR conditions, type casting |
 | "No Composer" | Full `composer.json`, PSR-4 autoloading, proper `vendor/` |
 | "Bad structure" | `public/` separation, `src/Core/` for framework, `app/` for user code |
 | "Just use Laravel" | Sure — if you want facades and service containers. This is the opposite. |
@@ -111,9 +111,9 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 
 | Tool | Level | Status |
 |------|-------|--------|
-| **PHPStan** | Level 8 | ✅ Passing |
+| **PHPStan** | Level 9 | ✅ Passing |
 | **Infection** | MSI 74%+ | ✅ Passing |
-| **PHPUnit** | 169 tests | ✅ Passing |
+| **PHPUnit** | 220 tests | ✅ Passing |
 | **GitHub Actions** | CI/CD | ✅ Automated |
 
 > All quality checks run automatically on every push and pull request.
@@ -233,7 +233,7 @@ composer test
 vendor/bin/phpunit
 ```
 
-**Current coverage:** 169 tests, 310 assertions
+**Current coverage:** 220 tests, 393 assertions
 
 ---
 
@@ -302,5 +302,5 @@ MIT License. See [LICENSE](./LICENSE) for details.
 </p>
 
 <p align="center">
-  <em>Roast me again on r/PHP if you want. I'll be here shipping v0.4.0.</em>
+  <em>Roast me again on r/PHP if you want. I'll be here shipping v0.7.0.</em>
 </p>

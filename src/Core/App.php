@@ -98,10 +98,16 @@ final class App
             return $destination($request);
         }
 
-        return (new Pipeline())
+        $result = (new Pipeline())
             ->send($request)
             ->through($middleware)
             ->then($destination);
+
+        if (!$result instanceof Response) {
+            throw new \RuntimeException('Middleware pipeline processing did not return a Response instance.');
+        }
+
+        return $result;
     }
 
     /**
@@ -109,7 +115,7 @@ final class App
      */
     private function handleException(\Throwable $e): never
     {
-        $debug = Config::get('app.debug', false);
+        $debug = (bool) Config::get('app.debug', false);
         $response = new Response();
         $status = $this->getHttpStatus($e);
 
@@ -148,7 +154,7 @@ final class App
                 return [
                     'file' => $frame['file'] ?? null,
                     'line' => $frame['line'] ?? null,
-                    'function' => ($frame['class'] ?? '') . ($frame['type'] ?? '') . ($frame['function'] ?? ''),
+                    'function' => ($frame['class'] ?? '') . ($frame['type'] ?? '') . $frame['function'],
                 ];
             }, $e->getTrace());
         }
@@ -314,7 +320,7 @@ HTML;
                     return $response->html('<h1>Intent Framework</h1><p>It works!</p>');
                 }
 
-                return $response->html(file_get_contents($welcomeFile));
+                return $response->html(file_get_contents($welcomeFile) ?: '');
             });
         }
     }

@@ -27,13 +27,17 @@ namespace Core;
  */
 final class Validator
 {
+    /** @var array<string, mixed> */
     private array $data;
+    /** @var array<string, string|array<int, string|int>> */
     private array $rules;
+    /** @var array<string, array<int, string>> */
     private array $errors = [];
+    /** @var array<string, string> */
     private array $customMessages = [];
 
     /**
-     * Built-in validation rules.
+     * Built-in validation rules (unused, for reference only).
      */
     private const RULES = [
         'required', 'email', 'url', 'integer', 'numeric', 'boolean',
@@ -41,6 +45,11 @@ final class Validator
         'regex', 'confirmed', 'nullable', 'alpha', 'alpha_num',
     ];
 
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, string|array<int, string|int>> $rules
+     * @param array<string, string> $messages
+     */
     public function __construct(array $data, array $rules, array $messages = [])
     {
         $this->data = $data;
@@ -51,6 +60,10 @@ final class Validator
 
     /**
      * Static factory for fluent usage.
+     * 
+     * @param array<string, mixed> $data
+     * @param array<string, string|array<int, string|int>> $rules
+     * @param array<string, string> $messages
      */
     public static function make(array $data, array $rules, array $messages = []): self
     {
@@ -75,6 +88,8 @@ final class Validator
 
     /**
      * Get all validation errors.
+     * 
+     * @return array<string, array<int, string>>
      */
     public function errors(): array
     {
@@ -83,6 +98,8 @@ final class Validator
 
     /**
      * Get validated data (only fields that were validated).
+     * 
+     * @return array<string, mixed>
      */
     public function validated(): array
     {
@@ -139,11 +156,14 @@ final class Validator
      *   'min:3'           - String with colon (Laravel style)
      *   ['min', 3]        - Array with params (explicit style)
      *   'required'        - Simple string rule
+     * 
+     * @param string|array<int, string|int> $rule
      */
     private function applyRule(string $field, mixed $value, string|array $rule): void
     {
+        /** @var array<int, string|int> $params */
         $params = [];
-        $ruleName = $rule;
+        $ruleName = '';
         
         // Handle array format: ['min', 3] or ['between', 1, 10]
         if (is_array($rule)) {
@@ -154,6 +174,8 @@ final class Validator
         elseif (str_contains($rule, ':')) {
             [$ruleName, $paramString] = explode(':', $rule, 2);
             $params = explode(',', $paramString);
+        } else {
+            $ruleName = $rule;
         }
 
         $method = 'validate' . str_replace('_', '', ucwords($ruleName, '_'));
@@ -168,6 +190,8 @@ final class Validator
 
     /**
      * Add an error message.
+     * 
+     * @param array<int, string|int> $params
      */
     private function addError(string $field, string $rule, array $params, string $default): void
     {
@@ -183,7 +207,9 @@ final class Validator
 
         // Replace placeholders
         $message = str_replace(':field', $this->formatField($field), $message);
-        $message = str_replace(':value', (string) ($this->data[$field] ?? ''), $message);
+        /** @var string $fieldValue */
+        $fieldValue = isset($this->data[$field]) ? (is_string($this->data[$field]) ? $this->data[$field] : '') : '';
+        $message = str_replace(':value', $fieldValue, $message);
         foreach ($params as $i => $param) {
             $message = str_replace(':param' . $i, (string) $param, $message);
         }
@@ -238,7 +264,7 @@ final class Validator
         if ($value === null || $value === '') {
             return true;
         }
-        if (!is_int($value) && !ctype_digit((string) $value)) {
+        if (!is_int($value) && !ctype_digit(is_string($value) ? $value : '')) {
             return ':field must be an integer';
         }
         return true;
@@ -288,6 +314,9 @@ final class Validator
         return true;
     }
 
+    /**
+     * @param array<int, string|int> $params
+     */
     private function validateMin(string $field, mixed $value, array $params): true|string
     {
         if ($value === null || $value === '') {
@@ -311,6 +340,9 @@ final class Validator
         return true;
     }
 
+    /**
+     * @param array<int, string|int> $params
+     */
     private function validateMax(string $field, mixed $value, array $params): true|string
     {
         if ($value === null || $value === '') {
@@ -334,6 +366,9 @@ final class Validator
         return true;
     }
 
+    /**
+     * @param array<int, string|int> $params
+     */
     private function validateBetween(string $field, mixed $value, array $params): true|string
     {
         if ($value === null || $value === '') {
@@ -355,35 +390,55 @@ final class Validator
         return true;
     }
 
+    /**
+     * @param array<int, string|int> $params
+     */
     private function validateIn(string $field, mixed $value, array $params): true|string
     {
         if ($value === null || $value === '') {
             return true;
         }
-        if (!in_array((string) $value, $params, true)) {
-            return ":field must be one of: " . implode(', ', $params);
+        /** @var string $stringValue */
+        $stringValue = is_string($value) ? $value : (string) $value;
+        /** @var array<int, string> $stringParams */
+        $stringParams = array_map('strval', $params);
+        if (!in_array($stringValue, $stringParams, true)) {
+            return ":field must be one of: " . implode(', ', $stringParams);
         }
         return true;
     }
 
+    /**
+     * @param array<int, string|int> $params
+     */
     private function validateNotIn(string $field, mixed $value, array $params): true|string
     {
         if ($value === null || $value === '') {
             return true;
         }
-        if (in_array((string) $value, $params, true)) {
-            return ":field must not be: " . implode(', ', $params);
+        /** @var string $stringValue */
+        $stringValue = is_string($value) ? $value : (string) $value;
+        /** @var array<int, string> $stringParams */
+        $stringParams = array_map('strval', $params);
+        if (in_array($stringValue, $stringParams, true)) {
+            return ":field must not be: " . implode(', ', $stringParams);
         }
         return true;
     }
 
+    /**
+     * @param array<int, string|int> $params
+     */
     private function validateRegex(string $field, mixed $value, array $params): true|string
     {
         if ($value === null || $value === '') {
             return true;
         }
-        $pattern = $params[0] ?? '';
-        if (!preg_match($pattern, (string) $value)) {
+        /** @var string $pattern */
+        $pattern = isset($params[0]) ? (string) $params[0] : '';
+        /** @var string $stringValue */
+        $stringValue = is_string($value) ? $value : (string) $value;
+        if (!preg_match($pattern, $stringValue)) {
             return ":field format is invalid";
         }
         return true;
@@ -403,7 +458,9 @@ final class Validator
         if ($value === null || $value === '') {
             return true;
         }
-        if (!ctype_alpha((string) $value)) {
+        /** @var string $stringValue */
+        $stringValue = is_string($value) ? $value : (string) $value;
+        if (!ctype_alpha($stringValue)) {
             return ":field must contain only letters";
         }
         return true;
@@ -414,7 +471,9 @@ final class Validator
         if ($value === null || $value === '') {
             return true;
         }
-        if (!ctype_alnum((string) $value)) {
+        /** @var string $stringValue */
+        $stringValue = is_string($value) ? $value : (string) $value;
+        if (!ctype_alnum($stringValue)) {
             return ":field must contain only letters and numbers";
         }
         return true;

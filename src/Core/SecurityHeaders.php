@@ -19,6 +19,7 @@ namespace Core;
  */
 final class SecurityHeaders
 {
+    /** @var array<string, string> */
     private array $options;
 
     /**
@@ -32,6 +33,9 @@ final class SecurityHeaders
         'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()',
     ];
 
+    /**
+     * @param array<string, string> $options
+     */
     public function __construct(array $options = [])
     {
         $this->options = array_merge(self::DEFAULTS, $options);

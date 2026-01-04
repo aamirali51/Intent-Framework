@@ -90,7 +90,7 @@ final class Route
      *       Route::get('/users', $handler);
      *   });
      * 
-     * @param array{prefix?: string, middleware?: array|string} $attributes
+     * @param array{prefix?: string, middleware?: array<string>|string} $attributes
      * @param callable $callback
      */
     public static function group(array $attributes, callable $callback): void
@@ -108,6 +108,8 @@ final class Route
 
     /**
      * Shorthand for middleware-only group.
+     * 
+     * @param array<string>|string $middleware
      */
     public static function middleware(array|string $middleware, callable $callback): void
     {

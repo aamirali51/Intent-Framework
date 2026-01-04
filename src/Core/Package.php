@@ -50,10 +50,16 @@ final class Package
             return;
         }
 
-        $installed = json_decode(file_get_contents($composerPath), true);
+        $composerContent = file_get_contents($composerPath);
+        if ($composerContent === false) {
+            return;
+        }
+        
+        $installed = json_decode($composerContent, true);
         
         // Handle both Composer 1.x and 2.x formats
-        $packages = $installed['packages'] ?? $installed;
+        /** @var array<int|string, mixed>|null $packages */
+        $packages = is_array($installed) ? ($installed['packages'] ?? $installed) : null;
 
         if (!is_array($packages)) {
             return;
@@ -64,13 +70,18 @@ final class Package
                 continue;
             }
 
-            $extra = $package['extra']['intent'] ?? null;
+            /** @var array<string, mixed>|null $extra */
+            $extra = is_array($package['extra'] ?? null) && isset($package['extra']['intent']) 
+                ? $package['extra']['intent'] 
+                : null;
             
-            if ($extra !== null) {
-                self::$packages[$package['name']] = [
-                    'providers' => $extra['providers'] ?? [],
-                    'aliases' => $extra['aliases'] ?? [],
-                    'config' => $extra['config'] ?? [],
+            if ($extra !== null && is_array($extra)) {
+                /** @var string $packageName */
+                $packageName = $package['name'] ?? 'unknown';
+                self::$packages[$packageName] = [
+                    'providers' => is_array($extra['providers'] ?? null) ? $extra['providers'] : [],
+                    'aliases' => is_array($extra['aliases'] ?? null) ? $extra['aliases'] : [],
+                    'config' => is_array($extra['config'] ?? null) ? $extra['config'] : [],
                 ];
             }
         }
@@ -82,12 +93,16 @@ final class Package
     private static function bootPackages(): void
     {
         foreach (self::$packages as $name => $config) {
-            self::bootProviders($config['providers'] ?? []);
+            if (is_array($config) && isset($config['providers']) && is_array($config['providers'])) {
+                self::bootProviders($config['providers']);
+            }
         }
     }
 
     /**
      * Boot service providers.
+     * 
+     * @param array<int, string> $providers
      */
     private static function bootProviders(array $providers): void
     {
@@ -112,6 +127,8 @@ final class Package
 
     /**
      * Get all discovered packages.
+     * 
+     * @return array<string, mixed>
      */
     public static function all(): array
     {
@@ -128,10 +145,14 @@ final class Package
 
     /**
      * Get a specific package's configuration.
+     * 
+     * @return array{providers: array<int, string>, aliases: array<string, string>, config: array<string, mixed>}|null
      */
     public static function get(string $name): ?array
     {
-        return self::$packages[$name] ?? null;
+        /** @var array{providers: array<int, string>, aliases: array<string, string>, config: array<string, mixed>}|null $package */
+        $package = self::$packages[$name] ?? null;
+        return $package;
     }
 
     /**

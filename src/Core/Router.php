@@ -12,16 +12,16 @@ namespace Core;
  */
 final class Router
 {
-    /** @var array<string, array<string, array{handler: callable, middleware: array}>> */
+    /** @var array<string, array<string, array{handler: callable, middleware: array<int, string|callable>}>> */
     private array $routes = [];
 
-    /** @var array<string, array<string, array{handler: callable, middleware: array}>> */
+    /** @var array<string, array<string, array{handler: callable, middleware: array<int, string|callable>}>> */
     private array $dynamicRoutes = [];
 
-    /** @var array Middleware for the last registered route */
+    /** @var array{method: string, path: string, isDynamic: bool} Middleware for the last registered route */
     private array $lastRoute = ['method' => '', 'path' => '', 'isDynamic' => false];
 
-    /** @var array Current group stack for nested groups */
+    /** @var array<array{prefix?: string, middleware?: array<string>|string}> Current group stack for nested groups */
     private array $groupStack = [];
 
     /**
@@ -70,7 +70,7 @@ final class Router
     /**
      * Create a route group with shared attributes.
      * 
-     * @param array{prefix?: string, middleware?: array|string} $attributes
+     * @param array{prefix?: string, middleware?: array<int, string|callable>|string|callable} $attributes
      * @param callable $callback
      */
     public function group(array $attributes, callable $callback): void
@@ -101,6 +101,8 @@ final class Router
 
     /**
      * Get the current group middleware.
+     * 
+     * @return array<int, string|callable>
      */
     private function getGroupMiddleware(): array
     {
@@ -153,6 +155,7 @@ final class Router
      */
     public function middleware(array|string|callable $middleware): self
     {
+        /** @var array<int, string|callable> $middleware */
         $middleware = is_array($middleware) ? $middleware : [$middleware];
         
         $method = $this->lastRoute['method'];
@@ -191,7 +194,7 @@ final class Router
      * - Default: explicit → file-based (predictable)
      * - Prototyping: file-based → explicit (quick iteration)
      * 
-     * @return array{handler: callable, params: array, middleware: array}|null
+     * @return array{handler: callable, params: array<string, mixed>, middleware: array<int, string|callable>}|null
      */
     public function dispatch(Request $request): ?array
     {
@@ -215,7 +218,7 @@ final class Router
     /**
      * Dispatch using explicit routes only.
      * 
-     * @return array{handler: callable, params: array, middleware: array}|null
+     * @return array{handler: callable, params: array<string, mixed>, middleware: array<int, string|callable>}|null
      */
     private function dispatchExplicit(string $method, string $path): ?array
     {
@@ -243,11 +246,14 @@ final class Router
             }
         }
 
+
         return null;
     }
 
     /**
      * Dispatch using file-based route only.
+     * 
+     * @return array{handler: callable, params: array<string, mixed>, middleware: array<int, string|callable>}|null
      */
     private function dispatchFileRoute(string $path): ?array
     {
@@ -264,6 +270,8 @@ final class Router
 
     /**
      * Dispatch with file routes first (prototyping mode).
+     * 
+     * @return array{handler: callable, params: array<string, mixed>, middleware: array<int, string|callable>}|null
      */
     private function dispatchFileFirst(string $method, string $path): ?array
     {

@@ -18,14 +18,21 @@ namespace Core;
 final class QueryBuilder
 {
     private string $table;
+    /** @var array<int, array{sql: string, chain: string}> */
     private array $wheres = [];
+    /** @var array<int, mixed> */
     private array $bindings = [];
+    /** @var array<int, string> */
     private array $orderBy = [];
     private ?int $limitValue = null;
     private ?int $offsetValue = null;
+    /** @var array<int, string> */
     private array $selectColumns = ['*'];
+    /** @var array<int, string> */
     private array $joins = [];
+    /** @var array<int, string> */
     private array $groupBy = [];
+    /** @var array<int, string> */
     private array $having = [];
 
     /**
@@ -55,9 +62,12 @@ final class QueryBuilder
 
     /**
      * Select specific columns.
+     * 
+     * @param string|array<int, string> $columns
      */
     public function select(string|array $columns = ['*']): self
     {
+        /** @var array<int, string> $cols */
         $cols = is_array($columns) ? $columns : func_get_args();
         $this->selectColumns = array_map([$this, 'escapeIdentifier'], $cols);
         return $this;
@@ -90,6 +100,8 @@ final class QueryBuilder
 
     /**
      * Add a where IN clause.
+     * 
+     * @param array<int, mixed> $values
      */
     public function whereIn(string $column, array $values): self
     {
@@ -154,6 +166,8 @@ final class QueryBuilder
 
     /**
      * Add an OR WHERE IN clause.
+     * 
+     * @param array<int, mixed> $values
      */
     public function orWhereIn(string $column, array $values): self
     {
@@ -295,17 +309,23 @@ final class QueryBuilder
 
     /**
      * Get all matching rows.
+     * 
+     * @return array<int, array<string, mixed>>
      */
     public function get(): array
     {
         $sql = $this->buildSelectQuery();
         $stmt = DB::connection()->prepare($sql);
-        $stmt->execute($this->bindings);
+        /** @var array<int, mixed> $bindings */
+        $bindings = $this->bindings;
+        $stmt->execute($bindings);
         return $stmt->fetchAll();
     }
 
     /**
      * Get the first matching row.
+     * 
+     * @return array<string, mixed>|null
      */
     public function first(): ?array
     {
@@ -316,6 +336,8 @@ final class QueryBuilder
 
     /**
      * Find a row by primary key.
+     * 
+     * @return array<string, mixed>|null
      */
     public function find(int|string $id, string $primaryKey = 'id'): ?array
     {
@@ -335,9 +357,12 @@ final class QueryBuilder
         }
 
         $stmt = DB::connection()->prepare($sql);
-        $stmt->execute($this->bindings);
+        /** @var array<int, mixed> $bindings */
+        $bindings = $this->bindings;
+        $stmt->execute($bindings);
+        /** @var array<string, mixed>|false $result */
         $result = $stmt->fetch();
-        return (int) ($result['count'] ?? 0);
+        return $result ? (int) ($result['count'] ?? 0) : 0;
     }
 
     /**
@@ -351,6 +376,7 @@ final class QueryBuilder
     /**
      * Insert a new row.
      * 
+     * @param array<string, mixed> $data
      * @return int|string Last insert ID
      */
     public function insert(array $data): int|string
@@ -378,6 +404,8 @@ final class QueryBuilder
 
     /**
      * Insert multiple rows.
+     * 
+     * @param array<int, array<string, mixed>> $rows
      */
     public function insertMany(array $rows): int
     {
@@ -416,9 +444,10 @@ final class QueryBuilder
      * Usage:
      *   DB::table('users')->insertOrIgnore(['email' => 'test@example.com', 'name' => 'John']);
      * 
+     * @param array<string, mixed> $data
      * @return int|string|false Last insert ID, or false if ignored
      */
-    public function insertOrIgnore(array $data): int|string|false
+    public function insertOrIgnore(array $data): int|string|bool
     {
         $columns = array_keys($data);
         $escapedColumns = array_map([$this, 'escapeIdentifier'], $columns);
@@ -508,6 +537,7 @@ final class QueryBuilder
     /**
      * Update matching rows.
      * 
+     * @param array<string, mixed> $data
      * @return int Number of affected rows
      */
     public function update(array $data): int
@@ -560,7 +590,9 @@ final class QueryBuilder
         }
 
         $stmt = DB::connection()->prepare($sql);
-        $stmt->execute($this->bindings);
+        /** @var array<int, mixed> $bindings */
+        $bindings = $this->bindings;
+        $stmt->execute($bindings);
 
         return $stmt->rowCount();
     }
@@ -684,7 +716,7 @@ final class QueryBuilder
     /**
      * Cast value to appropriate PDO type.
      * 
-     * @return array [value, PDO::PARAM_*]
+     * @return array{0: mixed, 1: int} [value, PDO::PARAM_*]
      */
     private function castValue(mixed $value): array
     {

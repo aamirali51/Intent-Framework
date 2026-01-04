@@ -11,6 +11,7 @@ namespace Core;
  */
 final class Config
 {
+    /** @var array<string, mixed> */
     private static array $config = [];
     private static bool $loaded = false;
 
@@ -57,6 +58,8 @@ final class Config
 
     /**
      * Get all configuration values.
+     * 
+     * @return array<string, mixed>
      */
     public static function all(): array
     {
@@ -81,6 +84,8 @@ final class Config
      * 
      * Usage in tests:
      *   Config::fake(['db.driver' => 'sqlite', 'app.debug' => true]);
+     * 
+     * @param array<string, mixed> $config
      */
     public static function fake(array $config): void
     {

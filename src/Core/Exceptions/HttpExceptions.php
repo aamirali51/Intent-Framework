@@ -20,6 +20,8 @@ class IntentException extends \Exception
 
     /**
      * Render the exception as an HTTP response.
+     * 
+     * @return array<string, mixed>
      */
     public function render(): array
     {
@@ -75,19 +77,29 @@ class ForbiddenException extends IntentException
 class ValidationException extends IntentException
 {
     protected int $statusCode = 422;
+    /** @var array<string, array<int, string>> */
     protected array $errors = [];
 
+    /**
+     * @param array<string, array<int, string>> $errors
+     */
     public function __construct(array $errors, string $message = 'Validation failed')
     {
         $this->errors = $errors;
         parent::__construct($message);
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function getErrors(): array
     {
         return $this->errors;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function render(): array
     {
         return [
@@ -116,6 +128,9 @@ class TooManyRequestsException extends IntentException
         return $this->retryAfter;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function render(): array
     {
         return [

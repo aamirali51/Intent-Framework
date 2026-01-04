@@ -16,6 +16,7 @@ namespace Core;
  */
 final class Paginator
 {
+    /** @var array<int, array<string, mixed>> */
     private array $items;
     private int $total;
     private int $perPage;
@@ -23,6 +24,9 @@ final class Paginator
     private int $lastPage;
     private string $path;
 
+    /**
+     * @param array<int, array<string, mixed>> $items
+     */
     public function __construct(
         array $items,
         int $total,
@@ -40,6 +44,8 @@ final class Paginator
 
     /**
      * Create paginator from array data.
+     * 
+     * @param array<int, array<string, mixed>> $items
      */
     public static function create(
         array $items,
@@ -77,11 +83,15 @@ final class Paginator
      */
     public static function resolveCurrentPage(): int
     {
-        return max(1, (int) ($_GET['page'] ?? 1));
+        /** @var int|string $page */
+        $page = $_GET['page'] ?? 1;
+        return max(1, (int) $page);
     }
 
     /**
      * Get the paginated items.
+     * 
+     * @return array<int, array<string, mixed>>
      */
     public function items(): array
     {
@@ -265,6 +275,8 @@ final class Paginator
 
     /**
      * Create page element.
+     * 
+     * @return array{url: string, label: string, active: bool}
      */
     private function pageElement(int $page): array
     {
@@ -290,7 +302,7 @@ final class Paginator
         if ($this->onFirstPage()) {
             $html .= '<li class="disabled"><span>&laquo;</span></li>';
         } else {
-            $html .= '<li><a href="' . htmlspecialchars($this->previousPageUrl()) . '">&laquo;</a></li>';
+            $html .= '<li><a href="' . htmlspecialchars($this->previousPageUrl() ?? '') . '">&laquo;</a></li>';
         }
 
         // Page numbers
@@ -308,7 +320,7 @@ final class Paginator
         if ($this->onLastPage()) {
             $html .= '<li class="disabled"><span>&raquo;</span></li>';
         } else {
-            $html .= '<li><a href="' . htmlspecialchars($this->nextPageUrl()) . '">&raquo;</a></li>';
+            $html .= '<li><a href="' . htmlspecialchars($this->nextPageUrl() ?? '') . '">&raquo;</a></li>';
         }
 
         $html .= '</ul></nav>';
@@ -321,13 +333,19 @@ final class Paginator
      */
     private function getCurrentPath(): string
     {
+        /** @var string $uri */
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
-        $path = parse_url($uri, PHP_URL_PATH) ?? '/';
+        $path = parse_url($uri, PHP_URL_PATH);
+        if ($path === false || $path === null) {
+            return '/';
+        }
         return $path;
     }
 
     /**
      * Convert to array for JSON.
+     * 
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {

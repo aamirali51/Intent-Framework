@@ -33,7 +33,7 @@ final class Event
     /**
      * Dispatch an event to all listeners.
      * 
-     * @return array Results from all listeners
+     * @return array<int, mixed> Results from all listeners
      */
     public static function dispatch(string $event, mixed ...$data): array
     {
@@ -60,6 +60,8 @@ final class Event
 
     /**
      * Get all listeners for an event.
+     * 
+     * @return array<int, callable>
      */
     public static function getListeners(string $event): array
     {

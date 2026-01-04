@@ -20,6 +20,7 @@ final class DB
 {
     private static ?\PDO $pdo = null;
     private static bool $loggingEnabled = false;
+    /** @var array<int, array<string, mixed>> */
     private static array $queryLog = [];
     private static ?\Closure $log = null;
 
@@ -29,12 +30,18 @@ final class DB
     public static function connection(): \PDO
     {
         if (self::$pdo === null) {
-            $driver = Config::get('db.driver', 'mysql');
-            $host = Config::get('db.host', 'localhost');
-            $port = Config::get('db.port', 3306);
-            $name = Config::get('db.name', 'intent');
-            $user = Config::get('db.user', 'root');
-            $pass = Config::get('db.pass', '');
+            /** @var string $driver */
+            $driver = is_string(Config::get('db.driver')) ? Config::get('db.driver') : 'mysql';
+            /** @var string $host */
+            $host = is_string(Config::get('db.host')) ? Config::get('db.host') : 'localhost';
+            /** @var string $port */
+            $port = is_string(Config::get('db.port')) || is_int(Config::get('db.port')) ? (string) Config::get('db.port') : '3306';
+            /** @var string $name */
+            $name = is_string(Config::get('db.name')) ? Config::get('db.name') : 'intent';
+            /** @var string $user */
+            $user = is_string(Config::get('db.user')) ? Config::get('db.user') : 'root';
+            /** @var string $pass */
+            $pass = is_string(Config::get('db.pass')) ? Config::get('db.pass') : '';
 
             // Build driver-specific DSN
             $dsn = match ($driver) {
@@ -75,6 +82,9 @@ final class DB
 
     /**
      * Execute raw SQL query.
+     * 
+     * @param array<string, mixed> $bindings
+     * @return array<int, array<string, mixed>>
      */
     public static function raw(string $sql, array $bindings = []): array
     {
@@ -90,7 +100,9 @@ final class DB
      */
     public static function getDriverName(): string
     {
-        return self::connection()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        /** @var string $driverName */
+        $driverName = self::connection()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        return is_string($driverName) ? $driverName : 'mysql';
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -121,7 +133,7 @@ final class DB
     /**
      * Get the query log.
      * 
-     * @return array Array of ['query' => string, 'bindings' => array, 'time' => float]
+     * @return array<int, array{raw_query?: string, query: string, bindings: array<string, mixed>, time: float|null}>
      */
     public static function getQueryLog(): array
     {
@@ -140,6 +152,7 @@ final class DB
      * Log a query (called internally by QueryBuilder).
      * 
      * @internal
+     * @param array<string, mixed> $bindings
      */
     public static function logQuery(string $sql, array $bindings = [], ?float $time = null): void
     {

@@ -45,7 +45,9 @@ final class Cache implements CacheInterface
     private static function getPath(): string
     {
         if (self::$path === null) {
-            self::$path = Config::get('path.cache', BASE_PATH . '/storage/cache');
+            /** @var string $configPath */
+            $configPath = Config::get('path.cache', BASE_PATH . '/storage/cache');
+            self::$path = $configPath;
         }
 
         if (!is_dir(self::$path)) {
@@ -278,7 +280,9 @@ final class Cache implements CacheInterface
      */
     public static function increment(string $key, int $amount = 1): int
     {
-        $value = (int) self::doGet($key, 0) + $amount;
+        /** @var int $currentValue */
+        $currentValue = self::doGet($key, 0);
+        $value = (int) $currentValue + $amount;
         self::forever($key, $value);
         return $value;
     }
@@ -317,13 +321,13 @@ final class Cache implements CacheInterface
         }
 
         // Check expiration
-        if (isset($data['expires']) && $data['expires'] > 0 && $data['expires'] < time()) {
+        if (is_array($data) && isset($data['expires']) && is_int($data['expires']) && $data['expires'] > 0 && $data['expires'] < time()) {
             self::doDelete($key);
             return $default;
         }
 
         // Use array_key_exists to properly handle null values
-        return array_key_exists('value', $data) ? $data['value'] : $default;
+        return is_array($data) && array_key_exists('value', $data) ? $data['value'] : $default;
     }
 
     /**

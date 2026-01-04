@@ -17,7 +17,9 @@ namespace Core;
  */
 final class Upload
 {
+    /** @var array{name: string, type: string, tmp_name: string, error: int, size: int} */
     private array $file;
+    /** @var array<int, string> */
     private array $errors = [];
     
     /** @var array<string> Allowed MIME types (empty = allow all) */
@@ -34,13 +36,17 @@ final class Upload
      */
     public function __construct(string $key)
     {
-        $this->file = $_FILES[$key] ?? [
+        /** @var array{name: string, type: string, tmp_name: string, error: int, size: int} $defaultFile */
+        $defaultFile = [
             'name' => '',
             'type' => '',
             'tmp_name' => '',
             'error' => UPLOAD_ERR_NO_FILE,
             'size' => 0,
         ];
+        /** @var array{name: string, type: string, tmp_name: string, error: int, size: int}|null $uploadedFile */
+        $uploadedFile = $_FILES[$key] ?? null;
+        $this->file = $uploadedFile ?? $defaultFile;
     }
 
     /**
@@ -168,6 +174,8 @@ final class Upload
 
     /**
      * Get validation errors.
+     * 
+     * @return array<int, string>
      */
     public function errors(): array
     {
@@ -251,6 +259,9 @@ final class Upload
         }
         
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo === false) {
+            return '';
+        }
         $mimeType = finfo_file($finfo, $this->file['tmp_name']);
         finfo_close($finfo);
         

@@ -14,16 +14,24 @@ final class Request
     public readonly string $method;
     public readonly string $uri;
     public readonly string $path;
+    /** @var array<string, mixed> */
     public readonly array $query;
+    /** @var array<string, mixed> */
     public readonly array $post;
+    /** @var array<string, mixed> */
     public readonly array $server;
+    /** @var array<string, string> */
     public readonly array $headers;
     public readonly ?string $body;
 
     public function __construct()
     {
-        $this->method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
-        $this->uri = $_SERVER['REQUEST_URI'] ?? '/';
+        /** @var string $requestMethod */
+        $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $this->method = strtoupper($requestMethod);
+        /** @var string $requestUri */
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+        $this->uri = $requestUri;
         $this->path = $this->parsePath($this->uri);
         $this->query = $_GET;
         $this->post = $_POST;
@@ -59,6 +67,8 @@ final class Request
 
     /**
      * Get JSON decoded body.
+     * 
+     * @return array<string, mixed>|null
      */
     public function json(): ?array
     {
@@ -83,7 +93,8 @@ final class Request
      */
     public function wantsJson(): bool
     {
-        $accept = $this->header('accept', '');
+        /** @var string $accept */
+        $accept = $this->header('accept', '') ?? '';
         return str_contains($accept, 'application/json');
     }
 
@@ -95,6 +106,7 @@ final class Request
     public function ip(): string
     {
         // Check for forwarded IP (behind proxy/load balancer)
+        /** @var string|null $forwardedFor */
         $forwardedFor = $this->server['HTTP_X_FORWARDED_FOR'] ?? null;
         if ($forwardedFor !== null) {
             // Take the first IP in the chain (original client)
@@ -113,15 +125,21 @@ final class Request
 
     private function parsePath(string $uri): string
     {
-        $path = parse_url($uri, PHP_URL_PATH) ?? '/';
+        $path = parse_url($uri, PHP_URL_PATH);
+        if ($path === false || $path === null) {
+            $path = '/';
+        }
         return '/' . trim($path, '/');
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function parseHeaders(): array
     {
         $headers = [];
         foreach ($this->server as $key => $value) {
-            if (str_starts_with($key, 'HTTP_')) {
+            if (is_string($key) && str_starts_with($key, 'HTTP_') && is_string($value)) {
                 $name = strtolower(str_replace('_', '-', substr($key, 5)));
                 $headers[$name] = $value;
             }

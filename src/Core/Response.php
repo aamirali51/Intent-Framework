@@ -12,6 +12,7 @@ namespace Core;
 final class Response
 {
     private int $status = 200;
+    /** @var array<string, string> */
     private array $headers = [];
     private string $body = '';
 

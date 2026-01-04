@@ -89,6 +89,15 @@ final class OAuth
      * @return array{id: string, email: string|null, name: string|null, avatar: string|null, provider: string, raw: array}
      * @throws RuntimeException If OAuth fails
      */
+    /**
+     * Handle OAuth callback and fetch user data.
+     * 
+     * @param string $provider Provider name
+     * @param string $code Authorization code from callback
+     * @param string|null $state State parameter for CSRF verification
+     * @return array{id: string, email: string|null, name: string|null, avatar: string|null, provider: string, raw: array<string, mixed>}
+     * @throws RuntimeException If OAuth fails
+     */
     public static function callback(string $provider, string $code, ?string $state = null): array
     {
         // Verify state (CSRF protection)
@@ -158,17 +167,20 @@ final class OAuth
         $data = json_decode($response, true);
         
         if (!is_array($data) || !isset($data['access_token'])) {
-            $error = $data['error'] ?? $data['error_description'] ?? 'Unknown error';
+            /** @var string $error */
+            $error = is_array($data) ? (string) ($data['error'] ?? $data['error_description'] ?? 'Unknown error') : 'Unknown error';
             throw new RuntimeException("OAuth token exchange failed: {$error}");
         }
         
-        return $data['access_token'];
+        /** @var string $accessToken */
+        $accessToken = $data['access_token'];
+        return $accessToken;
     }
 
     /**
      * Fetch user profile from provider.
      * 
-     * @return array{id: string, email: string|null, name: string|null, avatar: string|null, provider: string, raw: array}
+     * @return array{id: string, email: string|null, name: string|null, avatar: string|null, provider: string, raw: array<string, mixed>}
      */
     private static function fetchUser(string $provider, string $accessToken): array
     {
@@ -193,7 +205,8 @@ final class OAuth
     /**
      * Normalize user data from different providers.
      * 
-     * @return array{id: string, email: string|null, name: string|null, avatar: string|null, provider: string, raw: array}
+     * @param array<string, mixed> $raw
+     * @return array{id: string, email: string|null, name: string|null, avatar: string|null, provider: string, raw: array<string, mixed>}
      */
     private static function normalizeUser(string $provider, array $raw): array
     {
@@ -253,41 +266,56 @@ final class OAuth
             );
         }
         
-        return $config;
+        /** @var array{client_id: string, client_secret: string, redirect?: string} $typedConfig */
+        $typedConfig = $config;
+        return $typedConfig;
     }
 
     /**
      * Get redirect URI for a provider.
+     * 
+     * @param array{client_id: string, client_secret: string, redirect?: string} $config
      */
     private static function getRedirectUri(array $config): string
     {
         if (isset($config['redirect'])) {
             // If it's a relative path, make it absolute
             $redirect = $config['redirect'];
-            if (str_starts_with($redirect, '/')) {
+            if (is_string($redirect) && str_starts_with($redirect, '/')) {
                 $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                /** @var string $host */
                 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
                 return "{$scheme}://{$host}{$redirect}";
             }
-            return $redirect;
+            return is_string($redirect) ? $redirect : '';
         }
         
         // Default: current host + /auth/{provider}/callback
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        /** @var string $host */
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $provider = Session::get('oauth_provider', 'oauth');
+        /** @var string $provider */
+        $provider = Session::get('oauth_provider', 'oauth') ?? 'oauth';
         
         return "{$scheme}://{$host}/auth/{$provider}/callback";
     }
 
     /**
      * Make HTTP POST request.
+     * 
+     * @param array<string, string> $data
+     * @param array<int, string> $headers
      */
     private static function httpPost(string $url, array $data, array $headers = []): string
     {
+        if ($url === '') {
+            throw new RuntimeException('HTTP request URL cannot be empty');
+        }
+        
         $ch = curl_init();
         
-        curl_setopt_array($ch, [
+        /** @var array<int, mixed> $curlOpts */
+        $curlOpts = [
             CURLOPT_URL => $url,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => http_build_query($data),
@@ -297,13 +325,14 @@ final class OAuth
             ], $headers),
             CURLOPT_TIMEOUT => 30,
             CURLOPT_SSL_VERIFYPEER => true,
-        ]);
+        ];
+        curl_setopt_array($ch, $curlOpts);
         
         $response = curl_exec($ch);
         $error = curl_error($ch);
         curl_close($ch);
         
-        if ($response === false) {
+        if (!is_string($response)) {
             throw new RuntimeException("HTTP request failed: {$error}");
         }
         
@@ -312,24 +341,32 @@ final class OAuth
 
     /**
      * Make HTTP GET request.
+     * 
+     * @param array<int, string> $headers
      */
     private static function httpGet(string $url, array $headers = []): string
     {
+        if ($url === '') {
+            throw new RuntimeException('HTTP request URL cannot be empty');
+        }
+        
         $ch = curl_init();
         
-        curl_setopt_array($ch, [
+        /** @var array<int, mixed> $curlOpts */
+        $curlOpts = [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_SSL_VERIFYPEER => true,
-        ]);
+        ];
+        curl_setopt_array($ch, $curlOpts);
         
         $response = curl_exec($ch);
         $error = curl_error($ch);
         curl_close($ch);
         
-        if ($response === false) {
+        if (!is_string($response)) {
             throw new RuntimeException("HTTP request failed: {$error}");
         }
         

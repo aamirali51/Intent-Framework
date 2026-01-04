@@ -87,6 +87,8 @@ final class Session
 
     /**
      * Get all session data.
+     * 
+     * @return array<string, mixed>
      */
     public static function all(): array
     {
@@ -114,7 +116,7 @@ final class Session
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
             setcookie(
-                session_name(),
+                session_name() ?: 'PHPSESSID',
                 '',
                 time() - 42000,
                 $params['path'],
@@ -143,7 +145,7 @@ final class Session
     public static function id(): string
     {
         self::ensureStarted();
-        return session_id();
+        return session_id() ?: '';
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -157,11 +159,14 @@ final class Session
     {
         self::ensureStarted();
         
-        if (!isset($_SESSION[self::FLASH_KEY])) {
+        if (!isset($_SESSION[self::FLASH_KEY]) || !is_array($_SESSION[self::FLASH_KEY])) {
             $_SESSION[self::FLASH_KEY] = [];
         }
         
-        $_SESSION[self::FLASH_KEY][$key] = $value;
+        /** @var array<string, mixed> $flashData */
+        $flashData = $_SESSION[self::FLASH_KEY];
+        $flashData[$key] = $value;
+        $_SESSION[self::FLASH_KEY] = $flashData;
     }
 
     /**
@@ -172,8 +177,10 @@ final class Session
         self::ensureStarted();
         
         // Check old flash (from previous request)
-        if (isset($_SESSION[self::FLASH_OLD_KEY][$key])) {
-            return $_SESSION[self::FLASH_OLD_KEY][$key];
+        /** @var array<string, mixed>|null $flashOld */
+        $flashOld = $_SESSION[self::FLASH_OLD_KEY] ?? null;
+        if (is_array($flashOld) && isset($flashOld[$key])) {
+            return $flashOld[$key];
         }
         
         return $default;
@@ -181,11 +188,15 @@ final class Session
 
     /**
      * Get all flash messages.
+     * 
+     * @return array<string, mixed>
      */
     public static function getFlashes(): array
     {
         self::ensureStarted();
-        return $_SESSION[self::FLASH_OLD_KEY] ?? [];
+        /** @var array<string, mixed> $flashes */
+        $flashes = $_SESSION[self::FLASH_OLD_KEY] ?? [];
+        return is_array($flashes) ? $flashes : [];
     }
 
     /**
@@ -194,7 +205,9 @@ final class Session
     public static function hasFlash(string $key): bool
     {
         self::ensureStarted();
-        return isset($_SESSION[self::FLASH_OLD_KEY][$key]);
+        /** @var array<string, mixed>|null $flashOld */
+        $flashOld = $_SESSION[self::FLASH_OLD_KEY] ?? null;
+        return is_array($flashOld) && isset($flashOld[$key]);
     }
 
     /**
@@ -238,6 +251,7 @@ final class Session
     {
         self::ensureStarted();
         
+        /** @var int $current */
         $current = (int) ($_SESSION[$key] ?? 0);
         $new = $current + $amount;
         $_SESSION[$key] = $new;
@@ -271,6 +285,8 @@ final class Session
      * 
      * Usage in tests:
      *   Session::fake(['user_id' => 1, 'role' => 'admin']);
+     * 
+     * @param array<string, mixed> $data
      */
     public static function fake(array $data = []): void
     {

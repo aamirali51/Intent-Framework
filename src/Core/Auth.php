@@ -21,6 +21,7 @@ final class Auth
     private const SESSION_KEY = '_auth_user_id';
     private const SESSION_USER = '_auth_user';
 
+    /** @var array<string, mixed>|null */
     private static ?array $user = null;
     private static string $table = 'users';
     private static string $usernameField = 'email';
@@ -66,7 +67,9 @@ final class Auth
         }
 
         // Verify password
-        if (!password_verify($password, $user[self::$passwordField])) {
+        /** @var string|null $storedPassword */
+        $storedPassword = $user[self::$passwordField] ?? null;
+        if (!is_string($storedPassword) || !password_verify($password, $storedPassword)) {
             return false;
         }
 
@@ -78,6 +81,8 @@ final class Auth
 
     /**
      * Log in a user directly (without password check).
+     * 
+     * @param array<string, mixed> $user
      */
     public static function login(array $user): void
     {
@@ -98,6 +103,8 @@ final class Auth
      * 
      * Used by API token authentication for stateless requests.
      * The user is only available for this request - not persisted.
+     * 
+     * @param array<string, mixed> $user
      */
     public static function setUser(array $user): void
     {
@@ -145,6 +152,8 @@ final class Auth
 
     /**
      * Get the current authenticated user.
+     * 
+     * @return array<string, mixed>|null
      */
     public static function user(): ?array
     {
@@ -156,7 +165,9 @@ final class Auth
             return self::$user;
         }
 
-        self::$user = Session::get(self::SESSION_USER);
+        /** @var array<string, mixed>|null $user */
+        $user = Session::get(self::SESSION_USER);
+        self::$user = $user;
         return self::$user;
     }
 
@@ -170,7 +181,12 @@ final class Auth
         }
 
         $id = Session::get(self::SESSION_KEY);
-        return $id !== null ? (int) $id : null;
+        if ($id === null) {
+            return null;
+        }
+        /** @var int $userId */
+        $userId = is_int($id) ? $id : (int) $id;
+        return $userId;
     }
 
     /**
@@ -203,22 +219,28 @@ final class Auth
 
     /**
      * Create a new user with hashed password.
+     * 
+     * @param array<string, mixed> $data
      */
     public static function createUser(array $data): int
     {
         if (isset($data['password'])) {
-            $data['password'] = self::hash($data['password']);
+            /** @var string $rawPassword */
+            $rawPassword = is_string($data['password']) ? $data['password'] : '';
+            $data['password'] = self::hash($rawPassword);
         }
 
         if (isset($data['password_confirmation'])) {
             unset($data['password_confirmation']);
         }
 
-        return DB::table(self::$table)->insert($data);
+        return (int) DB::table(self::$table)->insert($data);
     }
 
     /**
      * Find user by ID.
+     * 
+     * @return array<string, mixed>|null
      */
     public static function findById(int $id): ?array
     {
@@ -233,6 +255,8 @@ final class Auth
 
     /**
      * Find user by email/username.
+     * 
+     * @return array<string, mixed>|null
      */
     public static function findByUsername(string $username): ?array
     {
@@ -268,6 +292,8 @@ final class Auth
      * Usage in tests:
      *   Auth::fake(['id' => 1, 'name' => 'Test User', 'email' => 'test@example.com']);
      *   $this->assertTrue(Auth::check());
+     * 
+     * @param array<string, mixed> $user
      */
     public static function fake(array $user): void
     {

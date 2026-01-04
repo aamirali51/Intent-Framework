@@ -18,6 +18,7 @@ namespace Core;
  */
 final class Schema
 {
+    /** @var array<string, array{created_at?: string, modified_at?: string, refreshed_at?: string, columns: array<string, array{type: string, php_type?: string}>}> */
     private static array $schemaCache = [];
     private static bool $loaded = false;
 
@@ -43,7 +44,7 @@ final class Schema
      * In PROD mode: Throws exception if table doesn't exist.
      * 
      * @param string $table Table name
-     * @param array $data Sample row data for type inference
+     * @param array<string, mixed> $data Sample row data for type inference
      */
     public static function ensure(string $table, array $data): void
     {
@@ -109,6 +110,8 @@ final class Schema
 
     /**
      * Get existing columns for a table.
+     * 
+     * @return array<int, string>
      */
     public static function getColumns(string $table): array
     {
@@ -116,11 +119,15 @@ final class Schema
             "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = ? AND table_name = ?"
         );
         $stmt->execute([Config::get('db.name'), $table]);
-        return array_column($stmt->fetchAll(), 'COLUMN_NAME');
+        /** @var array<int, string> $columns */
+        $columns = array_column($stmt->fetchAll(), 'COLUMN_NAME');
+        return $columns;
     }
 
     /**
      * Create a new table based on sample data.
+     * 
+     * @param array<string, mixed> $data
      */
     private static function createTable(string $table, array $data): void
     {
@@ -161,6 +168,8 @@ final class Schema
     /**
      * Add missing columns to an existing table.
      * NEVER drops columns.
+     * 
+     * @param array<string, mixed> $data
      */
     private static function addMissingColumns(string $table, array $data): void
     {
@@ -212,6 +221,9 @@ final class Schema
 
     /**
      * Infer column definitions from data.
+     * 
+     * @param array<string, mixed> $data
+     * @return array<string, array{type: string, php_type: string}>
      */
     private static function inferColumns(array $data): array
     {
@@ -280,6 +292,8 @@ final class Schema
 
     /**
      * Get cached schema info.
+     * 
+     * @return array<string, array{created_at?: string, modified_at?: string, refreshed_at?: string, columns: array<string, array{type: string, php_type?: string}>}>
      */
     public static function getCached(): array
     {

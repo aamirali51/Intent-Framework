@@ -65,8 +65,10 @@ if (!function_exists('view')) {
      * 
      * Without Twig:
      *   - Uses resources/views/welcome.php
+     * 
+     * @param array<string, mixed> $data
      */
-    function view(string $name, array $data = []): string
+    function view(string $name, $data = []): string
     {
         // Check if Twig is installed
         if (class_exists('Twig\Environment')) {
@@ -111,7 +113,7 @@ if (!function_exists('view')) {
         extract($data);
         ob_start();
         require $path;
-        return ob_get_clean();
+        return ob_get_clean() ?: '';
     }
 }
 
@@ -189,9 +191,14 @@ if (!function_exists('validate')) {
      * 
      * WHY: Quick validation without instantiating Validator.
      * Calls: Validator::make()
+     * 
+     * @param array<string, mixed> $data
+     * @param array<string, string|array<int, string|int>> $rules
+     * @param array<string, string> $messages
      */
     function validate(array $data, array $rules, array $messages = []): \Core\Validator
     {
+
         return \Core\Validator::make($data, $rules, $messages);
     }
 }
@@ -213,6 +220,7 @@ if (!function_exists('session')) {
         
         if ($key === null) {
             return new class {
+                /** @return array<string, mixed> */
                 public function all(): array { return \Core\Session::all(); }
                 public function clear(): void { \Core\Session::clear(); }
                 public function destroy(): void { \Core\Session::destroy(); }
@@ -269,14 +277,23 @@ if (!function_exists('auth')) {
         return new class {
             public function check(): bool { return \Core\Auth::check(); }
             public function guest(): bool { return \Core\Auth::guest(); }
-            public function user(): ?array { return \Core\Auth::user(); }
+            
+            /** @return array<string, mixed>|null */
+            public function user(): ?array { 
+                return \Core\Auth::user();
+            }
+            
             public function id(): ?int { return \Core\Auth::id(); }
             public function logout(): void { \Core\Auth::logout(); }
             
+            /** @param array<string, mixed> $credentials */
             public function attempt(array $credentials): bool {
-                return \Core\Auth::attempt($credentials);
+                /** @var array{email?: string, password: string} $typedCredentials */
+                $typedCredentials = $credentials;
+                return \Core\Auth::attempt($typedCredentials);
             }
             
+            /** @param array<string, mixed> $user */
             public function login(array $user): void {
                 \Core\Auth::login($user);
             }
@@ -293,6 +310,8 @@ if (!function_exists('user')) {
      * Usage:
      *   user()              // Get user array
      *   user()['name']      // Get user's name
+     * 
+     * @return array<string, mixed>|null
      */
     function user(): ?array
     {
@@ -308,10 +327,12 @@ if (!function_exists('event')) {
      * 
      * Usage:
      *   event('user.created', $user);
+     * 
+     * @return array<int, mixed>
      */
     function event(string $name, mixed ...$data): array
     {
-        return \Core\Event::dispatch($name, ...$data);
+        return \Core\Event::dispatch($name, ...$data) ?: [];
     }
 }
 
@@ -387,8 +408,10 @@ if (!function_exists('log_message')) {
      * Usage:
      *   log_message('info', 'User logged in', ['user_id' => 123]);
      *   log_message('error', 'Payment failed');
+     * 
+     * @param array<string, mixed> $context
      */
-    function log_message(string $level, string $message, array $context = []): void
+    function log_message(string $level, string $message, $context = []): void
     {
         \Core\Log::log($level, $message, $context);
     }
@@ -403,18 +426,25 @@ if (!function_exists('logger')) {
      * Usage:
      *   logger()->info('Message');         // Get logger
      *   logger('info', 'User login');      // Quick log
+     * 
+     * @param array<string, mixed> $context
      */
-    function logger(?string $level = null, ?string $message = null, array $context = []): object
+    function logger(?string $level = null, ?string $message = null, $context = []): object
     {
         if ($level !== null && $message !== null) {
             \Core\Log::log($level, $message, $context);
         }
 
         return new class {
+            /** @param array<string, mixed> $ctx */
             public function debug(string $msg, array $ctx = []): void { \Core\Log::debug($msg, $ctx); }
+            /** @param array<string, mixed> $ctx */
             public function info(string $msg, array $ctx = []): void { \Core\Log::info($msg, $ctx); }
+            /** @param array<string, mixed> $ctx */
             public function warning(string $msg, array $ctx = []): void { \Core\Log::warning($msg, $ctx); }
+            /** @param array<string, mixed> $ctx */
             public function error(string $msg, array $ctx = []): void { \Core\Log::error($msg, $ctx); }
+            /** @param array<string, mixed> $ctx */
             public function critical(string $msg, array $ctx = []): void { \Core\Log::critical($msg, $ctx); }
         };
     }
@@ -443,12 +473,12 @@ if (!function_exists('slug')) {
         $text = preg_replace('/[^a-z0-9]+/', $separator, $text);
         
         // Remove leading/trailing separators
-        $text = trim($text, $separator);
+        $text = trim($text ?? '', $separator);
         
         // Remove duplicate separators
         $text = preg_replace('/' . preg_quote($separator, '/') . '+/', $separator, $text);
         
-        return $text;
+        return (string) $text;
     }
 }
 
@@ -473,9 +503,18 @@ if (!function_exists('oauth_redirect')) {
      * Usage:
      *   return redirect(oauth_redirect('google'));
      *   return redirect(oauth_redirect('github', ['scope' => 'user:email']));
+     * 
+     * @param array<string, mixed> $options
      */
-    function oauth_redirect(string $provider, array $options = []): string
+    function oauth_redirect(string $provider, $options = []): string
     {
-        return \Core\OAuth::redirect($provider, $options);
+        /** @var array<string, string> $typedOptions */
+        $typedOptions = [];
+        foreach ($options as $key => $value) {
+            if (is_string($key) && is_string($value)) {
+                $typedOptions[$key] = $value;
+            }
+        }
+        return \Core\OAuth::redirect($provider, $typedOptions);
     }
 }

@@ -46,6 +46,9 @@ abstract class Migration
 
     /**
      * Execute a SQL query with bindings.
+     * 
+     * @param array<string, mixed> $bindings
+     * @return array<int, array<string, mixed>>
      */
     protected function query(string $sql, array $bindings = []): array
     {
@@ -68,6 +71,8 @@ final class Migrator
 
     /**
      * Run all pending migrations.
+     * 
+     * @return array<int, string>
      */
     public function run(): array
     {
@@ -90,6 +95,8 @@ final class Migrator
 
     /**
      * Rollback the last batch of migrations.
+     * 
+     * @return array<int, string>
      */
     public function rollback(): array
     {
@@ -99,11 +106,13 @@ final class Migrator
         $lastBatch = $this->getLastBatch();
 
         foreach ($lastBatch as $record) {
-            $migration = $this->resolve($record['migration']);
+            /** @var string $migrationName */
+            $migrationName = $record['migration'];
+            $migration = $this->resolve($migrationName);
             $migration->down();
             
-            $this->deleteMigration($record['migration']);
-            $rolledBack[] = $record['migration'];
+            $this->deleteMigration($migrationName);
+            $rolledBack[] = $migrationName;
         }
 
         return $rolledBack;
@@ -111,17 +120,21 @@ final class Migrator
 
     /**
      * Get pending migrations.
+     * 
+     * @return array<int, string>
      */
     public function getPendingMigrations(): array
     {
         $files = $this->getMigrationFiles();
         $ran = $this->getRanMigrations();
 
-        return array_diff($files, $ran);
+        return array_values(array_diff($files, $ran));
     }
 
     /**
      * Get all migration files.
+     * 
+     * @return array<int, string>
      */
     private function getMigrationFiles(): array
     {
@@ -142,11 +155,15 @@ final class Migrator
 
     /**
      * Get migrations that have already run.
+     * 
+     * @return array<int, string>
      */
     private function getRanMigrations(): array
     {
         $results = DB::raw("SELECT migration FROM {$this->migrationsTable} ORDER BY batch, migration");
-        return array_column($results, 'migration');
+        /** @var array<int, string> $migrations */
+        $migrations = array_column($results, 'migration');
+        return $migrations;
     }
 
     /**
@@ -227,6 +244,8 @@ final class Migrator
 
     /**
      * Get the last batch of migrations.
+     * 
+     * @return array<int, array<string, mixed>>
      */
     private function getLastBatch(): array
     {
@@ -239,7 +258,7 @@ final class Migrator
 
         return DB::raw(
             "SELECT migration FROM {$this->migrationsTable} WHERE batch = ? ORDER BY migration DESC",
-            [$lastBatch]
+            ['batch' => $lastBatch]
         );
     }
 

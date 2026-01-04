@@ -115,6 +115,8 @@ final class Registry
 
     /**
      * Get all registered binding keys.
+     * 
+     * @return array<int, string>
      */
     public static function keys(): array
     {

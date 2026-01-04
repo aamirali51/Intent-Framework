@@ -75,6 +75,12 @@ final class ApiToken
      * @param string $plainToken The bearer token from request
      * @return array|null User array if valid, null if invalid/expired
      */
+    /**
+     * Validate a token and return the associated user.
+     * 
+     * @param string $plainToken The bearer token from request
+     * @return array<string, mixed>|null User array if valid, null if invalid/expired
+     */
     public static function validate(string $plainToken): ?array
     {
         if ($plainToken === '') {
@@ -94,10 +100,14 @@ final class ApiToken
         
         // Check expiration
         if ($tokenRecord['expires_at'] !== null) {
-            $expiresAt = strtotime($tokenRecord['expires_at']);
+            /** @var string $expiresAtString */
+            $expiresAtString = $tokenRecord['expires_at'];
+            $expiresAt = strtotime($expiresAtString);
             if ($expiresAt !== false && $expiresAt < time()) {
                 // Token expired - clean it up
-                self::revoke((int) $tokenRecord['id']);
+                /** @var int $tokenId */
+                $tokenId = $tokenRecord['id'];
+                self::revoke($tokenId);
                 return null;
             }
         }
@@ -108,7 +118,9 @@ final class ApiToken
             ->update(['last_used_at' => date('Y-m-d H:i:s')]);
         
         // Fetch and return user
-        $user = DB::table(self::$userTable)->find((int) $tokenRecord['user_id']);
+        /** @var int $userId */
+        $userId = $tokenRecord['user_id'];
+        $user = DB::table(self::$userTable)->find($userId);
         
         if ($user !== null) {
             // Remove password field for security
@@ -129,9 +141,10 @@ final class ApiToken
     public static function fromRequest(Request $request): ?string
     {
         // Check Authorization header first
+        /** @var string $header */
         $header = $request->header('Authorization') ?? $request->header('authorization') ?? '';
         
-        if (str_starts_with($header, 'Bearer ')) {
+        if (is_string($header) && str_starts_with($header, 'Bearer ')) {
             return substr($header, 7);
         }
         
@@ -179,7 +192,7 @@ final class ApiToken
     /**
      * Get all tokens for a user (for management UI).
      * 
-     * @return array[] List of token records (without actual token values)
+     * @return array<int, array<string, mixed>> List of token records (without actual token values)
      */
     public static function userTokens(int $userId): array
     {
