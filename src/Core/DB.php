@@ -133,7 +133,7 @@ final class DB
     /**
      * Get the query log.
      * 
-     * @return array<int, array{raw_query?: string, query: string, bindings: array<string, mixed>, time: float|null}>
+     * @return array<int, array<string, mixed>>
      */
     public static function getQueryLog(): array
     {
@@ -160,7 +160,9 @@ final class DB
             return;
         }
 
-        $rawQuery = (new Query($sql, $bindings))->toSql(static::getDriverName());
+        /** @var array<string, mixed> $bindingsCast */
+        $bindingsCast = $bindings;
+        $rawQuery = (new Query($sql, $bindingsCast))->toSql(static::getDriverName());
 
         self::$queryLog[] = [
             'raw_query' => $rawQuery,

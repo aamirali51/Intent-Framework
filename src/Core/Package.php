@@ -94,7 +94,9 @@ final class Package
     {
         foreach (self::$packages as $name => $config) {
             if (is_array($config) && isset($config['providers']) && is_array($config['providers'])) {
-                self::bootProviders($config['providers']);
+                /** @var array<int, string> $providers */
+                $providers = $config['providers'];
+                self::bootProviders($providers);
             }
         }
     }

@@ -173,7 +173,8 @@ final class Migrator
     private function getNextBatchNumber(): int
     {
         $result = DB::raw("SELECT MAX(batch) as max_batch FROM {$this->migrationsTable}");
-        return (int) ($result[0]['max_batch'] ?? 0) + 1;
+        $maxBatch = $result[0]['max_batch'] ?? 0;
+        return is_numeric($maxBatch) ? (int) $maxBatch + 1 : 1;
     }
 
     /**
@@ -203,7 +204,8 @@ final class Migrator
     private function getLastBatch(): array
     {
         $result = DB::raw("SELECT MAX(batch) as max_batch FROM {$this->migrationsTable}");
-        $lastBatch = (int) ($result[0]['max_batch'] ?? 0);
+        $maxBatch = $result[0]['max_batch'] ?? 0;
+        $lastBatch = is_numeric($maxBatch) ? (int) $maxBatch : 0;
 
         if ($lastBatch === 0) {
             return [];

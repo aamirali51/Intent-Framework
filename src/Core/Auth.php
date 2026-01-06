@@ -184,9 +184,10 @@ final class Auth
         if ($id === null) {
             return null;
         }
-        /** @var int $userId */
-        $userId = is_int($id) ? $id : (int) $id;
-        return $userId;
+        if (is_int($id)) {
+            return $id;
+        }
+        return is_numeric($id) ? (int) $id : null;
     }
 
     /**

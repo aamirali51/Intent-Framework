@@ -21,7 +21,7 @@ final class Router
     /** @var array{method: string, path: string, isDynamic: bool} Middleware for the last registered route */
     private array $lastRoute = ['method' => '', 'path' => '', 'isDynamic' => false];
 
-    /** @var array<array{prefix?: string, middleware?: array<string>|string}> Current group stack for nested groups */
+    /** @var array<array{prefix?: string, middleware?: array<string|callable>|string|callable}> Current group stack for nested groups */
     private array $groupStack = [];
 
     /**
@@ -109,6 +109,7 @@ final class Router
         $middleware = [];
         foreach ($this->groupStack as $group) {
             if (isset($group['middleware'])) {
+                /** @var array<int, string|callable> $groupMiddleware */
                 $groupMiddleware = is_array($group['middleware']) 
                     ? $group['middleware'] 
                     : [$group['middleware']];

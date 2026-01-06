@@ -16,7 +16,7 @@ namespace Core;
  */
 final class Pipeline
 {
-    /** @var array<callable> */
+    /** @var array<callable|string> */
     private array $pipes = [];
     private mixed $passable;
 

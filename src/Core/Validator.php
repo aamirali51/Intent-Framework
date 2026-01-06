@@ -36,14 +36,7 @@ final class Validator
     /** @var array<string, string> */
     private array $customMessages = [];
 
-    /**
-     * Built-in validation rules (unused, for reference only).
-     */
-    private const RULES = [
-        'required', 'email', 'url', 'integer', 'numeric', 'boolean',
-        'string', 'array', 'min', 'max', 'between', 'in', 'not_in',
-        'regex', 'confirmed', 'nullable', 'alpha', 'alpha_num',
-    ];
+    // unused constant removed
 
     /**
      * @param array<string, mixed> $data
@@ -144,6 +137,9 @@ final class Validator
                     continue;
                 }
 
+                if (is_int($rule)) {
+                    $rule = (string) $rule;
+                }
                 $this->applyRule($field, $value, $rule);
             }
         }
@@ -399,7 +395,7 @@ final class Validator
             return true;
         }
         /** @var string $stringValue */
-        $stringValue = is_string($value) ? $value : (string) $value;
+        $stringValue = is_scalar($value) ? (string) $value : '';
         /** @var array<int, string> $stringParams */
         $stringParams = array_map('strval', $params);
         if (!in_array($stringValue, $stringParams, true)) {
@@ -417,7 +413,7 @@ final class Validator
             return true;
         }
         /** @var string $stringValue */
-        $stringValue = is_string($value) ? $value : (string) $value;
+        $stringValue = is_scalar($value) ? (string) $value : '';
         /** @var array<int, string> $stringParams */
         $stringParams = array_map('strval', $params);
         if (in_array($stringValue, $stringParams, true)) {
@@ -437,7 +433,7 @@ final class Validator
         /** @var string $pattern */
         $pattern = isset($params[0]) ? (string) $params[0] : '';
         /** @var string $stringValue */
-        $stringValue = is_string($value) ? $value : (string) $value;
+        $stringValue = is_scalar($value) ? (string) $value : '';
         if (!preg_match($pattern, $stringValue)) {
             return ":field format is invalid";
         }
@@ -459,7 +455,7 @@ final class Validator
             return true;
         }
         /** @var string $stringValue */
-        $stringValue = is_string($value) ? $value : (string) $value;
+        $stringValue = is_scalar($value) ? (string) $value : '';
         if (!ctype_alpha($stringValue)) {
             return ":field must contain only letters";
         }
@@ -472,7 +468,7 @@ final class Validator
             return true;
         }
         /** @var string $stringValue */
-        $stringValue = is_string($value) ? $value : (string) $value;
+        $stringValue = is_scalar($value) ? (string) $value : '';
         if (!ctype_alnum($stringValue)) {
             return ":field must contain only letters and numbers";
         }

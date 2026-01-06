@@ -167,8 +167,9 @@ final class OAuth
         $data = json_decode($response, true);
         
         if (!is_array($data) || !isset($data['access_token'])) {
+            $err = $data['error'] ?? $data['error_description'] ?? 'Unknown error';
             /** @var string $error */
-            $error = is_array($data) ? (string) ($data['error'] ?? $data['error_description'] ?? 'Unknown error') : 'Unknown error';
+            $error = is_scalar($err) ? (string) $err : 'Unknown error';
             throw new RuntimeException("OAuth token exchange failed: {$error}");
         }
         
@@ -192,6 +193,7 @@ final class OAuth
             'User-Agent: Intent-Framework/1.0',
         ]);
         
+        /** @var array<string, mixed>|null $raw */
         $raw = json_decode($response, true);
         
         if (!is_array($raw)) {
@@ -212,34 +214,34 @@ final class OAuth
     {
         return match ($provider) {
             'google' => [
-                'id' => (string) ($raw['id'] ?? ''),
-                'email' => $raw['email'] ?? null,
-                'name' => $raw['name'] ?? null,
-                'avatar' => $raw['picture'] ?? null,
+                'id' => is_scalar($raw['id'] ?? '') ? (string) ($raw['id'] ?? '') : '',
+                'email' => is_string($raw['email'] ?? null) ? $raw['email'] : null,
+                'name' => is_string($raw['name'] ?? null) ? $raw['name'] : null,
+                'avatar' => is_string($raw['picture'] ?? null) ? $raw['picture'] : null,
                 'provider' => 'google',
                 'raw' => $raw,
             ],
             'github' => [
-                'id' => (string) ($raw['id'] ?? ''),
-                'email' => $raw['email'] ?? null,
-                'name' => $raw['name'] ?? $raw['login'] ?? null,
-                'avatar' => $raw['avatar_url'] ?? null,
+                'id' => is_scalar($raw['id'] ?? '') ? (string) ($raw['id'] ?? '') : '',
+                'email' => is_string($raw['email'] ?? null) ? $raw['email'] : null,
+                'name' => isset($raw['name']) && is_string($raw['name']) ? $raw['name'] : (isset($raw['login']) && is_string($raw['login']) ? $raw['login'] : null),
+                'avatar' => is_string($raw['avatar_url'] ?? null) ? $raw['avatar_url'] : null,
                 'provider' => 'github',
                 'raw' => $raw,
             ],
             'facebook' => [
-                'id' => (string) ($raw['id'] ?? ''),
-                'email' => $raw['email'] ?? null,
-                'name' => $raw['name'] ?? null,
-                'avatar' => $raw['picture']['data']['url'] ?? null,
+                'id' => is_scalar($raw['id'] ?? '') ? (string) ($raw['id'] ?? '') : '',
+                'email' => is_string($raw['email'] ?? null) ? $raw['email'] : null,
+                'name' => is_string($raw['name'] ?? null) ? $raw['name'] : null,
+                'avatar' => isset($raw['picture']) && is_array($raw['picture']) && isset($raw['picture']['data']) && is_array($raw['picture']['data']) && isset($raw['picture']['data']['url']) && is_string($raw['picture']['data']['url']) ? $raw['picture']['data']['url'] : null,
                 'provider' => 'facebook',
                 'raw' => $raw,
             ],
             default => [
-                'id' => (string) ($raw['id'] ?? $raw['sub'] ?? ''),
-                'email' => $raw['email'] ?? null,
-                'name' => $raw['name'] ?? null,
-                'avatar' => $raw['picture'] ?? $raw['avatar_url'] ?? null,
+                'id' => is_scalar($raw['id'] ?? $raw['sub'] ?? '') ? (string) ($raw['id'] ?? $raw['sub'] ?? '') : '',
+                'email' => is_string($raw['email'] ?? null) ? $raw['email'] : null,
+                'name' => is_string($raw['name'] ?? null) ? $raw['name'] : null,
+                'avatar' => isset($raw['picture']) && is_string($raw['picture']) ? $raw['picture'] : (isset($raw['avatar_url']) && is_string($raw['avatar_url']) ? $raw['avatar_url'] : null),
                 'provider' => $provider,
                 'raw' => $raw,
             ],

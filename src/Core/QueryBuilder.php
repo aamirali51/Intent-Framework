@@ -362,7 +362,7 @@ final class QueryBuilder
         $stmt->execute($bindings);
         /** @var array<string, mixed>|false $result */
         $result = $stmt->fetch();
-        return $result ? (int) ($result['count'] ?? 0) : 0;
+        return $result && isset($result['count']) && is_numeric($result['count']) ? (int) $result['count'] : 0;
     }
 
     /**
@@ -377,9 +377,9 @@ final class QueryBuilder
      * Insert a new row.
      * 
      * @param array<string, mixed> $data
-     * @return int|string Last insert ID
+     * @return string|false Last insert ID
      */
-    public function insert(array $data): int|string
+    public function insert(array $data): string|false
     {
         $columns = array_keys($data);
         $escapedColumns = array_map([$this, 'escapeIdentifier'], $columns);
@@ -445,9 +445,9 @@ final class QueryBuilder
      *   DB::table('users')->insertOrIgnore(['email' => 'test@example.com', 'name' => 'John']);
      * 
      * @param array<string, mixed> $data
-     * @return int|string|false Last insert ID, or false if ignored
+     * @return string|bool Last insert ID, or false if ignored
      */
-    public function insertOrIgnore(array $data): int|string|bool
+    public function insertOrIgnore(array $data): string|bool
     {
         $columns = array_keys($data);
         $escapedColumns = array_map([$this, 'escapeIdentifier'], $columns);
@@ -489,6 +489,10 @@ final class QueryBuilder
      * @param array $data Data to insert
      * @param array $updateColumns Columns to update on conflict (key => value)
      * @return int|string Last insert ID or number of affected rows
+     */
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, mixed> $updateColumns
      */
     public function insertOrUpdate(array $data, array $updateColumns): int|string
     {
@@ -699,8 +703,11 @@ final class QueryBuilder
      * 
      * @throws \InvalidArgumentException If operator is not in whitelist
      */
-    private function validateOperator(string $operator): string
+    private function validateOperator(mixed $operator): string
     {
+        if (!is_string($operator)) {
+            throw new \InvalidArgumentException("Operator must be a string");
+        }
         $normalized = strtoupper(trim($operator));
         
         if (!in_array($normalized, self::ALLOWED_OPERATORS, true)) {
@@ -742,7 +749,7 @@ final class QueryBuilder
                 \PDO::PARAM_STR  // PDO doesn't have PARAM_FLOAT
             ],
             default => [
-                (string)$value,
+                is_scalar($value) ? (string) $value : '',
                 \PDO::PARAM_STR
             ]
         };

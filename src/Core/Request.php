@@ -77,7 +77,9 @@ final class Request
         }
 
         $decoded = json_decode($this->body, true);
-        return is_array($decoded) ? $decoded : null;
+        /** @var array<string, mixed>|null $decoded */
+        $decoded = is_array($decoded) ? $decoded : null;
+        return $decoded;
     }
 
     /**

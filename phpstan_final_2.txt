@@ -1,0 +1,49 @@
+Note: Using configuration file F:\laragon\www\Intent-Framework\phpstan.neon.
+ ------ ---------------------------------------------------------- 
+  Line   Core\OAuth.php                                            
+ ------ ---------------------------------------------------------- 
+  :171   Cannot cast mixed to string.                              
+         🪪  cast.string                                           
+  :214   Method Core\OAuth::normalizeUser() should return          
+         array{id: string, email: string|null, name: string|null,  
+         avatar: string|null, provider: string, raw: array<string  
+         , mixed>} but returns array{id: string, email: string|nu  
+         ll, name: mixed, avatar: mixed, provider: string, raw:    
+         array<string, mixed>}.                                    
+         🪪  return.type                                           
+         💡  Offset 'name' (string|null) does not accept type      
+         mixed.                                                    
+         💡  Offset 'avatar' (string|null) does not accept type    
+         mixed.                                                    
+ ------ ---------------------------------------------------------- 
+
+ ------ ------------------------------------------------------ 
+  Line   Core\QueryBuilder.php                                 
+ ------ ------------------------------------------------------ 
+  :450   PHPDoc tag @return with type int|string|false is not  
+         subtype of native type bool|string.                   
+         🪪  return.phpDocType                                 
+  :752   Cannot cast mixed to string.                          
+         🪪  cast.string                                       
+ ------ ------------------------------------------------------ 
+
+ -- -------------------------------------------------------------- 
+     Error                                                         
+ -- -------------------------------------------------------------- 
+     Ignored error pattern #^Call to an undefined static method    
+     Core\\(DB|Route|Auth|Request|Response|Session|Config|Validat  
+     or|Cache|Log|Upload|Paginator|Migration|Event|RateLimiter|Se  
+     curityHeaders|OAuth|Registry)::.*\(\)\.$# was not matched in  
+     reported errors.                                              
+     Ignored error pattern #^Access to an undefined property       
+     Core\\(DB|Route|Auth|Request|Response|Session|Config|Validat  
+     or|Cache|Log)::.*\.$# was not matched in reported errors.     
+     Ignored error pattern #^Call to an undefined method           
+     Core\\QueryBuilder::.*\(\)\.$# was not matched in reported    
+     errors.                                                       
+     Ignored error pattern #^Call to an undefined method           
+     Core\\Query::.*\(\)\.$# was not matched in reported errors.   
+ -- -------------------------------------------------------------- 
+
+ [ERROR] Found 8 errors                                           
+

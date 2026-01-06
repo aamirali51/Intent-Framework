@@ -1,0 +1,79 @@
+Note: Using configuration file F:\laragon\www\Intent-Framework\phpstan.neon.
+ ------ ---------------------------------------------------------- 
+  Line   Core\OAuth.php                                            
+ ------ ---------------------------------------------------------- 
+  :171   Cannot cast mixed to string.                              
+         🪪  cast.string                                           
+  :202   Parameter #2 $raw of static method                        
+         Core\OAuth::normalizeUser() expects array<string, mixed>  
+         , array<mixed, mixed> given.                              
+         🪪  argument.type                                         
+  :213   Method Core\OAuth::normalizeUser() should return          
+         array{id: string, email: string|null, name: string|null,  
+         avatar: string|null, provider: string, raw: array<string  
+         , mixed>} but returns array{id: string, email: string|nu  
+         ll, name: mixed, avatar: mixed, provider: string, raw:    
+         array<string, mixed>}.                                    
+         🪪  return.type                                           
+         💡  Offset 'name' (string|null) does not accept type      
+         mixed.                                                    
+         💡  Offset 'avatar' (string|null) does not accept type    
+         mixed.                                                    
+  :234   Cannot access offset 'data' on mixed.                     
+         🪪  offsetAccess.nonOffsetAccessible                      
+  :234   Cannot access offset 'url' on mixed.                      
+         🪪  offsetAccess.nonOffsetAccessible                      
+ ------ ---------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------- 
+  Line   Core\QueryBuilder.php                                     
+ ------ ---------------------------------------------------------- 
+  :365   Cannot cast mixed to int.                                 
+         🪪  cast.int                                              
+  :382   PHPDoc tag @return with type int|string is not subtype    
+         of native type string|false.                              
+         🪪  return.phpDocType                                     
+  :450   Method Core\QueryBuilder::insertOrIgnore() never returns  
+         int so it can be removed from the return type.            
+         🪪  return.unusedType                                     
+  :752   Cannot cast mixed to string.                              
+         🪪  cast.string                                           
+ ------ ---------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------- 
+  Line   Core\Request.php                                          
+ ------ ---------------------------------------------------------- 
+  :80    Method Core\Request::json() should return array<string,   
+         mixed>|null but returns array<mixed, mixed>|null.         
+         🪪  return.type                                           
+ ------ ---------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------- 
+  Line   Core\Router.php                                           
+ ------ ---------------------------------------------------------- 
+  :118   Method Core\Router::getGroupMiddleware() should return    
+         array<int, (callable(): mixed)|string> but returns array  
+         <mixed>.                                                  
+         🪪  return.type                                           
+ ------ ---------------------------------------------------------- 
+
+ -- -------------------------------------------------------------- 
+     Error                                                         
+ -- -------------------------------------------------------------- 
+     Ignored error pattern #^Call to an undefined static method    
+     Core\\(DB|Route|Auth|Request|Response|Session|Config|Validat  
+     or|Cache|Log|Upload|Paginator|Migration|Event|RateLimiter|Se  
+     curityHeaders|OAuth|Registry)::.*\(\)\.$# was not matched in  
+     reported errors.                                              
+     Ignored error pattern #^Access to an undefined property       
+     Core\\(DB|Route|Auth|Request|Response|Session|Config|Validat  
+     or|Cache|Log)::.*\.$# was not matched in reported errors.     
+     Ignored error pattern #^Call to an undefined method           
+     Core\\QueryBuilder::.*\(\)\.$# was not matched in reported    
+     errors.                                                       
+     Ignored error pattern #^Call to an undefined method           
+     Core\\Query::.*\(\)\.$# was not matched in reported errors.   
+ -- -------------------------------------------------------------- 
+
+ [ERROR] Found 15 errors                                          
+

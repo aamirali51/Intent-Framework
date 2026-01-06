@@ -251,8 +251,9 @@ final class Session
     {
         self::ensureStarted();
         
+        $value = $_SESSION[$key] ?? 0;
         /** @var int $current */
-        $current = (int) ($_SESSION[$key] ?? 0);
+        $current = is_numeric($value) ? (int) $value : 0;
         $new = $current + $amount;
         $_SESSION[$key] = $new;
         
