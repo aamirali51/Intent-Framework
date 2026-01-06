@@ -267,14 +267,15 @@ function migrate(): void {
     
     try {
         $migrator = new \Core\Migrator();
-        $pending = $migrator->getPendingMigrations();
         
-        if (empty($pending)) {
+        // run() must be called first - it creates the migrations table
+        // before getPendingMigrations() can query it
+        $ran = $migrator->run();
+        
+        if (empty($ran)) {
             info("Nothing to migrate.");
             return;
         }
-        
-        $ran = $migrator->run();
         
         foreach ($ran as $migration) {
             success("Migrated: {$migration}");

@@ -83,7 +83,7 @@ final class DB
     /**
      * Execute raw SQL query.
      * 
-     * @param array<string, mixed> $bindings
+     * @param array<int|string, mixed> $bindings
      * @return array<int, array<string, mixed>>
      */
     public static function raw(string $sql, array $bindings = []): array
@@ -152,7 +152,7 @@ final class DB
      * Log a query (called internally by QueryBuilder).
      * 
      * @internal
-     * @param array<string, mixed> $bindings
+     * @param array<int|string, mixed> $bindings
      */
     public static function logQuery(string $sql, array $bindings = [], ?float $time = null): void
     {

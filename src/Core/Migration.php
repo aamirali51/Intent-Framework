@@ -47,7 +47,7 @@ abstract class Migration
     /**
      * Execute a SQL query with bindings.
      * 
-     * @param array<string, mixed> $bindings
+     * @param array<int|string, mixed> $bindings
      * @return array<int, array<string, mixed>>
      */
     protected function query(string $sql, array $bindings = []): array
