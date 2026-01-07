@@ -10,7 +10,7 @@
   <a href="https://packagist.org/packages/intent/framework"><img src="https://img.shields.io/packagist/v/intent/framework.svg?style=flat-square" alt="Latest Version"></a>
   <a href="https://packagist.org/packages/intent/framework"><img src="https://img.shields.io/packagist/dt/intent/framework.svg?style=flat-square" alt="Total Downloads"></a>
   <a href="https://github.com/aamirali51/Intent-Framework/actions"><img src="https://github.com/aamirali51/Intent-Framework/workflows/CI/badge.svg" alt="CI Status"></a>
-  <a href="https://dashboard.stryker-mutator.io/reports/github.com/aamirali51/Intent-Framework/main"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Faamirali51%2FIntent-Framework%2Fmain" alt="Mutation testing badge"></a>
+
 </p>
 
 <p align="center">
@@ -115,7 +115,7 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 | Tool | Level | Status |
 |------|-------|--------|
 | **PHPStan** | Level 9 | ✅ Passing |
-| **Infection** | MSI 74%+ | ✅ Passing |
+
 | **PHPUnit** | 220 tests | ✅ Passing |
 | **GitHub Actions** | CI/CD | ✅ Automated |
 
