@@ -55,12 +55,10 @@ if (!function_exists('db')) {
      * Usage:
      *   db()->table('users')->where('id', 1)->first();
      *   db()->raw('SELECT * FROM users');
-     * 
-     * @return object Database proxy with table(), raw(), connection(), transaction() methods
      */
-    function db(): object
+    function db(): \Core\Contracts\DatabaseProxy
     {
-        /** @var object $db */
+        /** @var \Core\Contracts\DatabaseProxy $db */
         $db = \Core\Registry::get('db');
         return $db;
     }

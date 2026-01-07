@@ -38,6 +38,8 @@ final class App
      *   db()->table('users')...
      *   auth()->user()
      *   cache('key')
+     * 
+     * All proxies implement interfaces for PHPStan Level 9 compatibility.
      */
     private function registerServices(): void
     {
@@ -45,49 +47,10 @@ final class App
         Registry::instance('app', $this);
 
         // DB proxy - wraps static DB class for instance-style access
-        Registry::singleton('db', fn() => new class {
-            public function table(string $table): \Core\QueryBuilder
-            {
-                return \Core\DB::table($table);
-            }
+        Registry::singleton('db', fn() => new Proxies\DatabaseProxyImpl());
 
-            /**
-             * @param array<int|string, mixed> $bindings
-             * @return array<int, array<string, mixed>>
-             */
-            public function raw(string $sql, array $bindings = []): array
-            {
-                return \Core\DB::raw($sql, $bindings);
-            }
-
-            public function connection(): \PDO
-            {
-                return \Core\DB::connection();
-            }
-
-            public function transaction(callable $callback): mixed
-            {
-                return \Core\DB::transaction($callback);
-            }
-
-            public function beginTransaction(): bool
-            {
-                return \Core\DB::beginTransaction();
-            }
-
-            public function commit(): bool
-            {
-                return \Core\DB::commit();
-            }
-
-            public function rollback(): bool
-            {
-                return \Core\DB::rollback();
-            }
-        });
-
-        // Cache proxy
-        Registry::singleton('cache', fn() => \Core\Cache::instance());
+        // Cache - already has proper interface (PSR-16 CacheInterface)
+        Registry::singleton('cache', fn() => Cache::instance());
 
         // Request - fresh instance per resolution
         Registry::bind('request', fn() => new Request());
@@ -96,71 +59,19 @@ final class App
         Registry::bind('response', fn() => new Response());
 
         // Auth proxy
-        Registry::singleton('auth', fn() => new class {
-            public function check(): bool { return \Core\Auth::check(); }
-            public function guest(): bool { return \Core\Auth::guest(); }
-            /** @return array<string, mixed>|null */
-            public function user(): ?array { return \Core\Auth::user(); }
-            public function id(): ?int { return \Core\Auth::id(); }
-            public function logout(): void { \Core\Auth::logout(); }
-            /** @param array{email?: string, password: string} $credentials */
-            public function attempt(array $credentials): bool { return \Core\Auth::attempt($credentials); }
-            /** @param array<string, mixed> $user */
-            public function login(array $user): void { \Core\Auth::login($user); }
-        });
+        Registry::singleton('auth', fn() => new Proxies\AuthProxyImpl());
 
         // Session proxy
-        Registry::singleton('session', fn() => new class {
-            public function get(string $key, mixed $default = null): mixed { return \Core\Session::get($key, $default); }
-            public function set(string $key, mixed $value): void { \Core\Session::set($key, $value); }
-            public function has(string $key): bool { return \Core\Session::has($key); }
-            public function forget(string $key): void { \Core\Session::forget($key); }
-            /** @return array<string, mixed> */
-            public function all(): array { return \Core\Session::all(); }
-            public function clear(): void { \Core\Session::clear(); }
-            public function destroy(): void { \Core\Session::destroy(); }
-            public function regenerate(): void { \Core\Session::regenerate(); }
-            public function flash(string $key, mixed $value): void { \Core\Session::flash($key, $value); }
-            public function getFlash(string $key, mixed $default = null): mixed { return \Core\Session::getFlash($key, $default); }
-        });
+        Registry::singleton('session', fn() => new Proxies\SessionProxyImpl());
 
         // Log proxy
-        Registry::singleton('log', fn() => new class {
-            /** @param array<string, mixed> $context */
-            public function debug(string $message, array $context = []): void { \Core\Log::debug($message, $context); }
-            /** @param array<string, mixed> $context */
-            public function info(string $message, array $context = []): void { \Core\Log::info($message, $context); }
-            /** @param array<string, mixed> $context */
-            public function warning(string $message, array $context = []): void { \Core\Log::warning($message, $context); }
-            /** @param array<string, mixed> $context */
-            public function error(string $message, array $context = []): void { \Core\Log::error($message, $context); }
-            /** @param array<string, mixed> $context */
-            public function critical(string $message, array $context = []): void { \Core\Log::critical($message, $context); }
-            /** @param array<string, mixed> $context */
-            public function log(string $level, string $message, array $context = []): void { \Core\Log::log($level, $message, $context); }
-        });
+        Registry::singleton('log', fn() => new Proxies\LogProxyImpl());
 
         // Config proxy
-        Registry::singleton('config', fn() => new class {
-            public function get(string $key, mixed $default = null): mixed { return \Core\Config::get($key, $default); }
-            public function set(string $key, mixed $value): void { \Core\Config::set($key, $value); }
-            public function has(string $key): bool { return \Core\Config::has($key); }
-            /** @return array<string, mixed> */
-            public function all(): array { return \Core\Config::all(); }
-        });
+        Registry::singleton('config', fn() => new Proxies\ConfigProxyImpl());
 
         // Validator factory
-        Registry::bind('validator', fn() => new class {
-            /**
-             * @param array<string, mixed> $data
-             * @param array<string, string|array<int, string|int>> $rules
-             * @param array<string, string> $messages
-             */
-            public function make(array $data, array $rules, array $messages = []): \Core\Validator
-            {
-                return \Core\Validator::make($data, $rules, $messages);
-            }
-        });
+        Registry::singleton('validator', fn() => new Proxies\ValidatorFactoryImpl());
     }
 
     /**

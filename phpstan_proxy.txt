@@ -1,0 +1,35 @@
+﻿php : Note: Using configuration file 
+F:\laragon\www\Intent-Framework\phpstan.neon.
+At line:1 char:1
++ php vendor/bin/phpstan analyse --no-progress 
+src/Core/Contracts src/C ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con. 
+   ..k\phpstan.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ -- ---------------------------------------------------------- 
+     Error                                                     
+ -- ---------------------------------------------------------- 
+     Ignored error pattern #^Call to an undefined static       
+     method                                                    
+     Core\\(DB|Route|Auth|Request|Response|Session|Config|Val  
+     idator|Cache|Log|Upload|Paginator|Migration|Event|RateLi  
+     miter|SecurityHeaders|OAuth|Registry)::.*\(\)\.$# was     
+     not matched in reported errors.                           
+     Ignored error pattern #^Access to an undefined property   
+     Core\\(DB|Route|Auth|Request|Response|Session|Config|Val  
+     idator|Cache|Log)::.*\.$# was not matched in reported     
+     errors.                                                   
+     Ignored error pattern #^Call to an undefined method       
+     Core\\QueryBuilder::.*\(\)\.$# was not matched in         
+     reported errors.                                          
+     Ignored error pattern #^Call to an undefined method       
+     Core\\Query::.*\(\)\.$# was not matched in reported       
+     errors.                                                   
+ -- ---------------------------------------------------------- 
+
+
+ [ERROR] Found 4 errors                                       
+
