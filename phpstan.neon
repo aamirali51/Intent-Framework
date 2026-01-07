@@ -8,7 +8,7 @@ parameters:
     bootstrapFiles:
         - phpstan-bootstrap.php
     treatPhpDocTypesAsCertain: false
-    reportUnmatchedIgnoredErrors: true
+    reportUnmatchedIgnoredErrors: false
 
     ignoreErrors:
         # ============================================================

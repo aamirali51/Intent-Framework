@@ -167,7 +167,10 @@ final class OAuth
         $data = json_decode($response, true);
         
         if (!is_array($data) || !isset($data['access_token'])) {
-            $err = $data['error'] ?? $data['error_description'] ?? 'Unknown error';
+            $err = 'Unknown error';
+            if (is_array($data)) {
+                $err = $data['error'] ?? $data['error_description'] ?? 'Unknown error';
+            }
             /** @var string $error */
             $error = is_scalar($err) ? (string) $err : 'Unknown error';
             throw new RuntimeException("OAuth token exchange failed: {$error}");
