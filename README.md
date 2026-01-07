@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://packagist.org/packages/intent/framework"><img src="https://img.shields.io/packagist/v/intent/framework.svg?style=flat-square" alt="Latest Version"></a>
   <a href="https://packagist.org/packages/intent/framework"><img src="https://img.shields.io/packagist/dt/intent/framework.svg?style=flat-square" alt="Total Downloads"></a>
-  <a href="https://github.com/aamirali51/Intent-Framework/actions"><img src="https://github.com/aamirali51/Intent-Framework/workflows/CI/badge.svg" alt="CI Status"></a>
+  <a href="https://github.com/aamirali51/Intent-Framework/actions"><img src="https://github.com/aamirali51/Intent-Framework/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
 
 </p>
 
