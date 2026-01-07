@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
   <img src="https://img.shields.io/badge/Tests-220%20Passing-brightgreen?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/PHPStan-Level%209-4ade80?style=for-the-badge" alt="PHPStan Level 9">
-  <img src="https://img.shields.io/badge/Version-0.8.1-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/github/v/tag/aamirali51/Intent-Framework?style=for-the-badge&label=Version" alt="Version">
 </p>
 
 <p align="center">
