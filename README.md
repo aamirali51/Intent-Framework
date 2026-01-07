@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/badge/Composer-PSR--4-885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
   <img src="https://img.shields.io/badge/Tests-220%20Passing-brightgreen?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/PHPStan-Level%209-4ade80?style=for-the-badge" alt="PHPStan Level 9">
-  <img src="https://img.shields.io/badge/Version-0.7.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.8.1-blue?style=for-the-badge" alt="Version">
 </p>
 
 <p align="center">
@@ -57,9 +57,12 @@ if ($v->fails()) {
     return $response->json(['errors' => $v->errors()], 422);
 }
 
+// Database (v0.8+ helper syntax)
+$users = db()->table('users')->get();
+
 // Cache with remember pattern
-$users = Cache::remember('users', 3600, fn() => 
-    DB::table('users')->get()
+$stats = cache()->remember('stats', 3600, fn() => 
+    db()->table('stats')->first()
 );
 
 // Events
@@ -97,7 +100,7 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 |---------------|-----------------|
 | "AI-generated slop" | Yes, AI-assisted — and it's clean, tested, and consistent |
 | "No tests" | **220 tests, 393 assertions** via PHPUnit |
-| "Incomplete" | v0.7.0 has middleware, auth, sessions, events, cache, CLI, OR conditions, type casting |
+| "Incomplete" | v0.8.1 has middleware, auth, sessions, events, cache, CLI, registry proxies |
 | "No Composer" | Full `composer.json`, PSR-4 autoloading, proper `vendor/` |
 | "Bad structure" | `public/` separation, `src/Core/` for framework, `app/` for user code |
 | "Just use Laravel" | Sure — if you want facades and service containers. This is the opposite. |
@@ -136,6 +139,28 @@ This project was posted on r/PHP and got absolutely flamed. Let me own that:
 | **Dev Schema** | Auto-creates tables in dev mode (disabled in prod) |
 | **Secure File Routes** | Outside `public/`, in `app/Api/` |
 | **CLI Tool** | `php intent serve`, `php intent make:handler` |
+| **Registry Proxies** | Type-safe service access with PHPStan Level 9 support |
+
+---
+
+## 🔄 Service Access Pattern (v0.8+)
+
+All services are accessed via **registry-backed helpers** for consistency and testability:
+
+```php
+// ✅ Canonical pattern (v0.8+)
+db()->table('users')->where('id', 1)->first();
+auth()->user();
+cache('key', $value, 3600);
+session('user_id');
+logger()->info('Message');
+
+// ❌ Deprecated (still works, avoid in new code)
+DB::table('users')->get();  // Use db() instead
+Cache::put('key', $value);  // Use cache() instead
+```
+
+> Static facades will be removed in v2.0. Use helpers for new code.
 
 ---
 
@@ -302,5 +327,5 @@ MIT License. See [LICENSE](./LICENSE) for details.
 </p>
 
 <p align="center">
-  <em>Roast me again on r/PHP if you want. I'll be here shipping v0.7.0.</em>
+  <em>Roast me again on r/PHP if you want. I'll be here shipping v0.8.1.</em>
 </p>
