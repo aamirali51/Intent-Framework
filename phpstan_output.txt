@@ -1,0 +1,53 @@
+﻿php : Note: Using configuration file 
+F:\laragon\www\Intent-Framework\phpstan.neon.
+At line:1 char:1
++ php vendor/bin/phpstan analyse --no-progress 2>&1 | 
+Out-File -FilePat ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con. 
+   ..k\phpstan.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ ---------------------------------------------------- 
+  Line   Core\OAuth.php                                      
+ ------ ---------------------------------------------------- 
+  :170   Cannot access offset 'error' on mixed.              
+         ­ƒ¬¬  offsetAccess.nonOffsetAccessible                
+  :170   Cannot access offset 'error_description' on mixed.  
+         ­ƒ¬¬  offsetAccess.nonOffsetAccessible                
+ ------ ---------------------------------------------------- 
+
+ ------ --------------------------------------------------- 
+  Line   helpers.php                                        
+ ------ --------------------------------------------------- 
+  :45    Function app() should return Core\App but returns  
+         mixed.                                             
+         ­ƒ¬¬  return.type                                    
+  :61    Function db() should return object but returns     
+         mixed.                                             
+         ­ƒ¬¬  return.type                                    
+ ------ --------------------------------------------------- 
+
+ -- ---------------------------------------------------------- 
+     Error                                                     
+ -- ---------------------------------------------------------- 
+     Ignored error pattern #^Call to an undefined static       
+     method                                                    
+     Core\\(DB|Route|Auth|Request|Response|Session|Config|Val  
+     idator|Cache|Log|Upload|Paginator|Migration|Event|RateLi  
+     miter|SecurityHeaders|OAuth|Registry)::.*\(\)\.$# was     
+     not matched in reported errors.                           
+     Ignored error pattern #^Access to an undefined property   
+     Core\\(DB|Route|Auth|Request|Response|Session|Config|Val  
+     idator|Cache|Log)::.*\.$# was not matched in reported     
+     errors.                                                   
+     Ignored error pattern #^Call to an undefined method       
+     Core\\QueryBuilder::.*\(\)\.$# was not matched in         
+     reported errors.                                          
+     Ignored error pattern #^Call to an undefined method       
+     Core\\Query::.*\(\)\.$# was not matched in reported       
+     errors.                                                   
+ -- ---------------------------------------------------------- 
+
+ [ERROR] Found 8 errors                                       
+

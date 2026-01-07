@@ -1,6 +1,6 @@
 # Intent Framework - Technical Documentation
 
-> **Version:** 0.7.0  
+> **Version:** 0.8.0  
 > **PHP Version:** 8.2+  
 > **Architecture:** AI-native, zero-boilerplate micro-framework
 
@@ -18,6 +18,71 @@
 | **PSR-4** | Standard autoloading via Composer |
 | **PSR-3 Compatible** | Logging follows PSR-3 log levels |
 | **PSR-16 Compatible** | Cache implements SimpleCache interface |
+
+---
+
+## Service Access Pattern (Canonical since v0.8.0)
+
+All services should be accessed via **registry-backed helper functions**. This provides:
+- **Consistency**: Single access pattern across the codebase
+- **Testability**: Easy to mock via Registry
+- **Future-proofing**: Decouples from static classes
+
+### Canonical Helpers
+
+```php
+// Database
+db()->table('users')->where('id', 1)->first();
+db()->raw('SELECT * FROM users');
+db()->transaction(fn() => /* ... */);
+
+// Authentication
+auth()->check();
+auth()->user();
+auth()->attempt(['email' => $email, 'password' => $pass]);
+
+// Cache
+cache('key');                      // Get
+cache('key', $value, 3600);        // Set for 1 hour
+cache()->flush();                  // Clear all
+
+// Session
+session('user_id');                // Get
+session('user_id', 123);           // Set
+session()->destroy();              // Destroy
+
+// Configuration
+config('app.name');
+config('db.driver', 'mysql');      // With default
+
+// Logging
+logger()->info('User logged in');
+logger()->error('Payment failed', ['order' => 123]);
+
+// Request/Response
+request()->post('name');
+response()->json(['success' => true]);
+
+// Application
+app()->router();
+```
+
+### Deprecated Patterns (Avoid)
+
+Static facade calls are deprecated and will be removed in v2.0:
+
+```php
+// ❌ Deprecated - avoid in new code
+DB::table('users')->get();
+Cache::put('key', $value);
+
+// ✅ Use helper functions instead
+db()->table('users')->get();
+cache('key', $value);
+```
+
+> **Note**: `Route::get()` and `Route::post()` for route definitions are NOT deprecated.
+> Only service access patterns are being standardized.
 
 ---
 

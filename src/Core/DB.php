@@ -15,6 +15,9 @@ use Closure;
  *   DB::table('users')->where('id', 1)->first();
  *   DB::raw('SELECT * FROM users WHERE id = ?', [1]);
  *   $pdo = DB::connection();
+ * 
+ * @deprecated since v0.8.0 Use db() helper instead. Static facade will be removed in v2.0.
+ *             Prefer: db()->table('users')...
  */
 final class DB
 {

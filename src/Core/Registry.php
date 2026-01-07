@@ -84,6 +84,16 @@ final class Registry
     }
 
     /**
+     * Alias for make() - resolve a binding.
+     * 
+     * Provided for API consistency with common DI patterns.
+     */
+    public static function get(string $id): mixed
+    {
+        return self::make($id);
+    }
+
+    /**
      * Check if a binding exists.
      */
     public static function has(string $id): bool

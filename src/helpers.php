@@ -3,14 +3,76 @@
 declare(strict_types=1);
 
 /**
- * Global helper functions.
+ * Intent Framework - Global Helper Functions
  * 
- * Keep these minimal. Only add truly universal helpers.
+ * CANONICAL SERVICE ACCESS PATTERN (since v0.8.0)
+ * ================================================
+ * 
+ * All services should be accessed via these helper functions.
+ * Helpers delegate to Registry::make() for consistency and testability.
+ * 
+ * Usage:
+ *   db()->table('users')->get();
+ *   auth()->user();
+ *   request()->post('name');
+ *   config('app.name');
+ *   cache('key', $value, 3600);
+ *   session('user_id');
+ *   logger()->info('Message');
+ * 
+ * DEPRECATED PATTERNS (still work, avoid in new code):
+ *   DB::table('users')...     // Use db() instead
+ *   Cache::put('key', $val)   // Use cache() instead
+ * 
+ * Static facades will be removed in v2.0.
+ * 
+ * @see \Core\Registry for service registration
  */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Core Service Helpers (Registry-backed)
+// ─────────────────────────────────────────────────────────────────────────────
+
+if (!function_exists('app')) {
+    /**
+     * Get the application instance.
+     * 
+     * Usage:
+     *   app()->router()->dispatch($request);
+     */
+    function app(): \Core\App
+    {
+        /** @var \Core\App $app */
+        $app = \Core\Registry::get('app');
+        return $app;
+    }
+}
+
+if (!function_exists('db')) {
+    /**
+     * Get the database instance for query building.
+     * 
+     * Usage:
+     *   db()->table('users')->where('id', 1)->first();
+     *   db()->raw('SELECT * FROM users');
+     * 
+     * @return object Database proxy with table(), raw(), connection(), transaction() methods
+     */
+    function db(): object
+    {
+        /** @var object $db */
+        $db = \Core\Registry::get('db');
+        return $db;
+    }
+}
 
 if (!function_exists('config')) {
     /**
      * Get a configuration value.
+     * 
+     * Usage:
+     *   config('app.name');
+     *   config('db.driver', 'mysql');
      */
     function config(string $key, mixed $default = null): mixed
     {

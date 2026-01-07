@@ -22,6 +22,9 @@ use Psr\SimpleCache\CacheInterface;
  * Usage (Instance):
  *   $cache = Cache::instance();
  *   $cache->set('key', $value, 3600);
+ * 
+ * @deprecated since v0.8.0 Use cache() helper instead. Static facade will be removed in v2.0.
+ *             Prefer: cache('key', $value, 3600) or cache()->flush()
  */
 final class Cache implements CacheInterface
 {
